@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 require 'yaml'
-require_relative 'parsbank/version'
-require_relative 'parsbank/mellat/mellat'
-require_relative 'configuration'
+require 'savon'
+
+require 'parsbank/version'
+require 'parsbank/mellat/mellat'
+require 'configuration'
 
 # Main Module
 module Parsbank
@@ -92,8 +94,7 @@ module Parsbank
   def self.redirect_to_gateway(amount:, bank:)
     selected_bank = available_gateways_list.select { |k| k == bank }
     raise 'Bank not enabled or not found' unless selected_bank.present?
-
-    Parsbank.send(bank)
+    Parsbank.const_get(bank.capitalize)
   end
 
   def self.load_secrets_yaml
