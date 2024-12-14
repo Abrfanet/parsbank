@@ -3,6 +3,7 @@
 require 'yaml'
 require_relative 'parsbank/version'
 require_relative 'parsbank/mellat/mellat'
+require_relative 'configuration'
 
 # Main Module
 module Parsbank
@@ -95,33 +96,26 @@ module Parsbank
     Parsbank.send(bank)
   end
 
-  class Configuration
-    attr_accessor :callback_url, :debug, :sandbox,
-                  :webhook,
-                  :webhook_method,
-                  :mitm_server,
-                  :secrets_path,
-                  :min_amount,
-                  :webpanel_path,
-                  :username,
-                  :password,
-                  :allowed_ips,
-                  :allow_when,
-                  :captcha,
-                  :model
-
-    def initialize; end
-  end
-
   def self.load_secrets_yaml
-    cogs = YAML.load_file(Parsbank.configuration.secrets_path)
-    cogs.keys.map do |k|
-      raise "#{k.capitalize} on #{Parsbank.configuration.secrets_path} not supported by ParsBank \n Supported Banks: #{$SUPPORTED_PSP[0].keys.join(', ')}" unless $SUPPORTED_PSP[0].keys.include?(k.to_sym)
+    # Load the YAML file specified by the secrets_path
+    secrets = YAML.load_file(Parsbank.configuration.secrets_path)
+  
+    unless secrets.is_a?(Hash)
+      raise "Error: Invalid format in #{Parsbank.configuration.secrets_path}. Expected a hash of bank secrets."
     end
-    cogs
+  
+    supported_banks = $SUPPORTED_PSP[0].keys
+  
+    secrets.each_key do |bank_key|
+      unless supported_banks.include?(bank_key.to_sym)
+        raise "#{bank_key.capitalize} in #{Parsbank.configuration.secrets_path} is not supported by ParsBank. \nSupported Banks: #{supported_banks.join(', ')}"
+      end
+    end
+  
+    secrets
   rescue Errno::ENOENT
-    raise 'Error: Secrets file of banks not found.'
+    raise "Error: Secrets file not found at #{Parsbank.configuration.secrets_path}."
   rescue Psych::SyntaxError => e
-    raise "Secret bank YAML syntax error: #{e.message}"
+    raise "Error: YAML syntax issue in #{Parsbank.configuration.secrets_path}: #{e.message}"
   end
 end
