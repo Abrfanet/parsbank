@@ -17,6 +17,9 @@ module Parsbank
   
       def validate(response = nil)
         @response = response[:payment_request_response] || response[:payment_verification_response] || response
+        @ref_id = @response[:authority]
+        @status = @response[:status].present? ? @response[:status] : 'FAILED'
+
         perform_validation
         self
       end
@@ -37,14 +40,14 @@ module Parsbank
       end
   
       def redirect_form
-        `
-        <script type="text/javascript" charset="utf-8">
+        "
+        <script type='text/javascript' charset='utf-8'>
   function postRefId (refIdValue) {
         var form = document.createElement('form');
         form.setAttribute('method', 'POST');
         form.setAttribute('action', 'https://www.zarinpal.com/pg/StartPay/#{ref_id}');
-        form.setAttribute("target', '_self");
-        var hiddenField = document.createElement("input");
+        form.setAttribute('target', '_self');
+        var hiddenField = document.createElement('input');
         hiddenField.setAttribute('name', 'RefId');
         hiddenField.setAttribute('value', refIdValue);
         form.appendChild(hiddenField);
@@ -56,7 +59,7 @@ module Parsbank
   
         postRefId('#{ref_id}') %>')
       </script>
-          `
+          "
       end
   
       private
@@ -87,6 +90,7 @@ module Parsbank
       def perform_validation
         # Logic for validation should be implemented here.
         # Update @valid, @status, and @status_message based on @response.
+        @valid = @response[:status] == '100' ? true : false
       end
     end
   end
