@@ -10,10 +10,10 @@ module Parsbank
       @local_time = args.fetch(:localTime, Time.now.strftime('%H%M%S'))
       @additional_data = args.fetch(:additionalData, ' ')
       @payer_id = args.fetch(:payerId, 0)
-      @callback_url = args.fetch(:callBackUrl, default_config(:callBackUrl))
-      @terminal_id = args.fetch(:terminalId, default_config(:terminalId))
-      @username = args.fetch(:userName, default_config(:userName))
-      @user_password = args.fetch(:userPassword, default_config(:userPassword))
+      @callback_url = args.fetch(:callBackUrl, default_config(:callback_url))
+      @terminal_id = args.fetch(:terminalId, default_config(:terminal_id))
+      @username = args.fetch(:userName, default_config(:username))
+      @user_password = args.fetch(:userPassword, default_config(:password))
       @wsdl = create_wsdl_client
     rescue KeyError => e
       raise ArgumentError, "Missing required argument: #{e.message}"
@@ -66,12 +66,12 @@ function postRefId (refIdValue) {
     private
 
     def default_config(key)
-      Mellat.configuration.public_send(key)
+        Parsbank.load_secrets_yaml[self.class.name.split("::").last.downcase][key.to_s]
     end
 
     def create_wsdl_client
       Savon.client(
-        wsdl: default_config(:wsdl),
+        wsdl: default_config(:wsdl) || 'https://bpm.shaparak.ir/pgwchannel/services/pgw?wsdl',
         pretty_print_xml: true,
         namespace: 'http://interfaces.core.sw.bps.com/'
       )
