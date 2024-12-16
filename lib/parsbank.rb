@@ -106,6 +106,16 @@ module Parsbank
       )
       mellat_klass.call
       result= mellat_klass.redirect_form
+
+    when 'zarinpal'
+      zarinpal_klass= Parsbank::Zarinpal.new(
+        amount: amount,
+        additional_data: description,
+        callback_url: selected_bank['mellat']['callback_url'] || Parsbank.configuration.callback_url
+      )
+      zarinpal_klass.call
+      result= zarinpal_klass.redirect_form
+
     end
 
     
