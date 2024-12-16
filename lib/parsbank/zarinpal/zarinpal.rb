@@ -1,7 +1,7 @@
 module Parsbank
     class Zarinpal
       attr_accessor :amount, :description, :email, :mobile, :merchant_id
-      attr_reader :response, :status, :status_message, :ref_id
+      attr_reader :response, :status, :status_message, :ref_id, :logo
   
       def initialize(args = {})
         @mobile = args.fetch(:mobile, nil)
@@ -13,6 +13,16 @@ module Parsbank
         @wsdl = create_wsdl_client
       rescue KeyError => e
         raise ArgumentError, "Missing required argument: #{e.message}"
+      end
+
+      def self.logo
+        file_path = "#{File.expand_path File.dirname(__FILE__)}/logo.svg"
+        return [404, { "Content-Type" => "text/plain" }, ["File not found"]] unless File.exist?(file_path)
+        [
+          200,
+          { "Content-Type" => "image/svg+xml" },
+          File.open(file_path, "r")
+        ]
       end
   
       def validate(response = nil)
