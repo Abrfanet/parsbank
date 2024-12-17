@@ -6,6 +6,7 @@ require 'savon'
 require 'parsbank/version'
 require 'parsbank/mellat/mellat'
 require 'parsbank/zarinpal/zarinpal'
+require 'parsbank/zibal/zibal'
 require 'configuration'
 
 # Main Module
@@ -95,13 +96,16 @@ module Parsbank
   def self.redirect_to_gateway(amount:, bank:, description:)
     selected_bank = available_gateways_list.select { |k| k == bank }
     raise "Bank not enabled or not found: #{bank}" unless selected_bank.present?
+    
+
+    default_callback = Parsbank.configuration.callback_url + "&bank_name=#{bank}"
 
     case bank
     when 'mellat'
      mellat_klass= Parsbank::Mellat.new(
         amount: amount,
         additional_data: description,
-        callback_url: selected_bank['mellat']['callback_url'] || Parsbank.configuration.callback_url,
+        callback_url: selected_bank['mellat']['callback_url'] || default_callback,
         orderId: rand(1...9999)
       )
       mellat_klass.call
@@ -111,11 +115,13 @@ module Parsbank
       zarinpal_klass= Parsbank::Zarinpal.new(
         amount: amount,
         additional_data: description,
-        callback_url: selected_bank['mellat']['callback_url'] || Parsbank.configuration.callback_url
+        callback_url: selected_bank['zarinpal']['callback_url'] || default_callback
       )
       zarinpal_klass.call
       result= zarinpal_klass.redirect_form
 
+    when 'zibal'
+    
     end
 
     

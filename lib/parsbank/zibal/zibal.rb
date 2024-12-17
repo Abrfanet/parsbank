@@ -1,6 +1,9 @@
+require 'faraday'
+require 'faraday_middleware'
 module Parsbank
-    class Zarinpal
-      attr_accessor :amount, :description, :email, :mobile, :merchant_id
+    class Zibal
+      attr_accessor :amount, :description, :email, :mobile, :merchant,:callbackUrl, :orderId, :allowedCards, :ledgerId, :nationalCode, :checkMobileWithCard
+
       attr_reader :response, :status, :status_message, :ref_id, :logo
   
       def initialize(args = {})
@@ -10,7 +13,7 @@ module Parsbank
         @description = args.fetch(:description, ' ')
         @callback_url = args.fetch(:callback_url, (default_config(:callback_url) || Parsbank.configuration.callback_url ))
         @merchant_id = args.fetch(:merchant_id, default_config(:merchant_id))
-        @wsdl = create_wsdl_client
+        @wsdl = create_rest_client
       rescue KeyError => e
         raise ArgumentError, "Missing required argument: #{e.message}"
       end
@@ -78,15 +81,48 @@ module Parsbank
         Parsbank.load_secrets_yaml[self.class.name.split("::").last.downcase][key.to_s]
       end
   
-      def create_wsdl_client
-        Savon.client(
-          wsdl: default_config(:wsdl) || 'https://de.zarinpal.com/pg/services/WebGate/wsdl',
-          pretty_print_xml: (Parsbank.configuration.debug ? true : false),
-          namespace: 'http://interfaces.core.sw.bps.com/',
-          log: (Parsbank.configuration.debug ? true : false),
-          logger: Rails.logger,
-          log_level: (Parsbank.configuration.debug ? :debug : :fatal)
-        )
+      def create_rest_client
+        response = Faraday.new(url: default_config(:endpoint) || 'https://gateway.zibal.ir') do |conn|
+          conn.request :json # Automatically converts payload to JSON
+          conn.response :json # Automatically parses JSON response
+          conn.adapter Faraday.default_adapter
+        end.post('/v1/request') do |req|
+          req.headers['Content-Type'] = 'application/json'
+          req.headers['Authorization'] = "Bearer #{default_config(:access_token)}" # Optional if API requires authentication
+          req.headers['User-Ajent'] = "ParsBank #{Parsbank::VERSION}"
+
+          req.body = build_request_message
+        end
+
+
+        Rails.logger.info "Received response with status: #{response.status}, body: #{response.body.inspect}"
+
+        if response.success?
+          response.body # Parsed JSON response
+        else
+          Rails.logger.error "POST request to #{BASE_URL}/#{endpoint} failed with status: #{response.status}, error: #{response.body.inspect}"
+          raise "API request failed with status #{response.status}: #{response.body}"
+        end
+      rescue Faraday::ConnectionFailed => e
+        Rails.logger.error "Connection failed: #{e.message}"
+        raise "Connection to API failed: #{e.message}"
+      rescue Faraday::TimeoutError => e
+        Rails.logger.error "Request timed out: #{e.message}"
+        raise "API request timed out: #{e.message}"
+      rescue StandardError => e
+        Rails.logger.error "An error occurred: #{e.message}"
+        raise "An unexpected error occurred: #{e.message}"
+
+
+
+        
+
+
+      
+      response_json = JSON.parse response.body
+      
+
+        
       end
   
       def build_request_message
@@ -107,3 +143,4 @@ module Parsbank
       end
     end
   end
+  

@@ -4,6 +4,7 @@ PATH
     parsbank (0.0.1)
       activerecord
       faraday
+      faraday_middleware
       savon
 
 GEM
@@ -61,6 +62,8 @@ GEM
     faraday-patron (1.0.0)
     faraday-rack (1.0.0)
     faraday-retry (1.0.3)
+    faraday_middleware (1.2.0)
+      faraday (~> 1.0)
     gyoku (1.4.0)
       builder (>= 2.1.2)
       rexml (~> 3.0)

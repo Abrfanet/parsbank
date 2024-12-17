@@ -34,7 +34,8 @@ ParsBank.configuration do |config|
 
     config.callback_url = 'YOUR CALLBACK LOCATION LIKE https://example.com/CallBack'
 
-    config.debug = false # Enable Log Tracking with Rails.log
+    config.debug = false # Enable Log Tracking with Rails.log and STDOUT
+
     config.sandbox = false # Enable Simulation for your requst also approve callback without verification
 
     config.webhook = "https://yoursite.com/income-webhook?title=TITLE&message=MESSAGE" # Webhook for notify any success transactions or errors on cominiucate with Core Bank
