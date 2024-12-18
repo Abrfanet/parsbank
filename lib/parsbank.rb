@@ -74,6 +74,10 @@ module Parsbank
     'zibal': {
       'name': 'Zibal',
       'website': 'http://zibal.ir'
+    },
+    'bitcoin': {
+      'name': 'Bitcoin',
+      'website': 'https://bitcoin.org'
     }
   ]
   class << self
