@@ -91,6 +91,9 @@ module Parsbank
         conn.request :json          # Automatically converts payload to JSON
         conn.response :json         # Automatically parses JSON response
         conn.adapter Faraday.default_adapter
+        conn.request :retry, max: 3, interval: 0.05,
+                             interval_randomness: 0.5, backoff_factor: 2,
+                             exceptions: ['Timeout::Error']
       end
 
       response = connection.post('/v1/request') do |req|
