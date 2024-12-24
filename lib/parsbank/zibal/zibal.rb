@@ -8,7 +8,7 @@ module Parsbank
   
       def initialize(args = {})
 
-      @amount = args.fetch(:amount, nil)
+      @amount = args.fetch(:amount)
       @description = args.fetch(:description, nil)
       @email = args.fetch(:email, nil)
       @mobile = args.fetch(:mobile, nil)
@@ -19,7 +19,7 @@ module Parsbank
       @ledgerId = args.fetch(:ledgerId, nil)
       @nationalCode = args.fetch(:nationalCode, nil)
       @checkMobileWithCard = args.fetch(:checkMobileWithCard, nil)
-      @wsdl = create_rest_client
+      
       rescue KeyError => e
         raise ArgumentError, "Missing required argument: #{e.message}"
       end
@@ -36,8 +36,8 @@ module Parsbank
   
       def validate(response = nil)
         @response = response
-        @ref_id = @response[:trackId]
-        @status = @response[:result].present? ? @response[:result] : 'FAILED'
+        @ref_id = @response['trackId']
+        @status = @response['result'].present? ? @response['result'] : 'FAILED'
 
         perform_validation
         self
@@ -46,14 +46,14 @@ module Parsbank
       def valid?
         @valid
       end
-  
+
       def ref_id
         @ref_id.to_s
       end
   
       def call
-        response = @wsdl.call(:payment_request, message: build_request_message)
-        validate(response.body)
+        create_rest_client
+        
       rescue Savon::Error => e
         raise "SOAP request failed: #{e.message}"
       end
@@ -88,15 +88,18 @@ module Parsbank
       end
   
       def create_rest_client
-        response = Faraday.new(url: default_config(:endpoint) || 'https://gateway.zibal.ir') do |conn|
-          conn.request :json # Automatically converts payload to JSON
-          conn.response :json # Automatically parses JSON response
+        connection = Faraday.new(url: default_config(:endpoint) || 'https://gateway.zibal.ir') do |conn|
+          conn.request :json          # Automatically converts payload to JSON
+          conn.response :json         # Automatically parses JSON response
           conn.adapter Faraday.default_adapter
-        end.post('/v1/request') do |req|
-          req.headers['Content-Type'] = 'application/json'
-          req.headers['Authorization'] = "Bearer #{default_config(:access_token)}" # Optional if API requires authentication
-          req.headers['User-Ajent'] = "ParsBank #{Parsbank::VERSION}"
-
+        end
+        
+        response = connection.post('/v1/request') do |req|
+          req.headers = {
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer #{default_config(:access_token)}", # Optional if API requires authentication
+            'User-Agent' => "ParsBank #{Parsbank::VERSION}"
+          }
           req.body = build_request_message
         end
 
@@ -104,7 +107,7 @@ module Parsbank
         Rails.logger.info "Received response with status: #{response.status}, body: #{response.body.inspect}"
 
         if response.success?
-          response.body # Parsed JSON response
+          validate(response.body)
         else
           Rails.logger.error "POST request to #{BASE_URL}/#{endpoint} failed with status: #{response.status}, error: #{response.body.inspect}"
           raise "API request failed with status #{response.status}: #{response.body}"
@@ -121,14 +124,8 @@ module Parsbank
 
 
 
-        
-
-
-      
+    
       response_json = JSON.parse response.body
-      
-
-        
       end
   
       def build_request_message
@@ -150,7 +147,7 @@ module Parsbank
       def perform_validation
         # Logic for validation should be implemented here.
         # Update @valid, @status, and @status_message based on @response.
-        @valid = @response[:status] == '100' ? true : false
+        @valid = @response['result'] == '100' ? true : false
       end
     end
   end

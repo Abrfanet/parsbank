@@ -24,7 +24,7 @@ module Parsbank
           File.open(file_path, "r")
         ]
       end
-  
+
       def validate(response = nil)
         @response = response[:payment_request_response] || response[:payment_verification_response] || response
         @ref_id = @response[:authority]
@@ -33,7 +33,7 @@ module Parsbank
         perform_validation
         self
       end
-  
+
       def valid?
         @valid
       end
