@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'faraday'
 require 'faraday_middleware'
 module Parsbank
@@ -87,29 +89,26 @@ module Parsbank
     end
 
     def create_rest_client
-      connection = Faraday.new(url: default_config(:endpoint) || 'https://gateway.zibal.ir') do |conn|
-        conn.request :json          # Automatically converts payload to JSON
-        conn.response :json         # Automatically parses JSON response
-        conn.adapter Faraday.default_adapter
-        conn.request :retry, max: 3, interval: 0.05,
-                             interval_randomness: 0.5, backoff_factor: 2,
-                             exceptions: ['Timeout::Error']
-      end
-
-      response = connection.post('/v1/request') do |req|
-        req.headers = {
+      connection = Parsbank::Restfull.new(
+        endpoint: default_config(:endpoint) || 'https://gateway.zibal.ir',
+        action: '/v1/request',
+        headers: {
           'Content-Type' => 'application/json',
-          'Authorization' => "Bearer #{default_config(:access_token)}", # Optional if API requires authentication
-          'User-Agent' => "ParsBank #{Parsbank::VERSION}"
-        }
-        req.body = build_request_message
-      end
+          'Authorization' => "Bearer #{default_config(:access_token)}"
+        },
+        request_message: build_request_message,
+        http_method: :post,
+        response_type: :json
+      )
+
+      response = connection.call
 
       Rails.logger.info "Received response with status: #{response.status}, body: #{response.body.inspect}"
 
-      if response.success?
+      if response.valid?
         validate(response.body)
       else
+        @valid = false
         Rails.logger.error "POST request to #{BASE_URL}/#{endpoint} failed with status: #{response.status}, error: #{response.body.inspect}"
         raise "API request failed with status #{response.status}: #{response.body}"
       end
@@ -123,7 +122,7 @@ module Parsbank
       Rails.logger.error "An error occurred: #{e.message}"
       raise "An unexpected error occurred: #{e.message}"
 
-      response_json = JSON.parse response.body
+      JSON.parse response.body
     end
 
     def build_request_message
