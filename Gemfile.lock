@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    parsbank (0.0.1)
+    parsbank (0.0.2)
       activerecord
       faraday
       faraday_middleware
