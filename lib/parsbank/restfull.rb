@@ -17,7 +17,7 @@ module Parsbank
         response = send_request
   
         Rails.logger.info("Received response with status: #{response.status}, body: #{response.body.inspect}")
-  
+
         if response.success?
           response
         else
@@ -83,7 +83,7 @@ module Parsbank
       def default_headers
         {
           'Content-Type' => 'application/json',
-          'Parsbank-Gem' => Parsbank::VERSION
+          'Parsbank-RubyGem' => Parsbank::VERSION
         }
       end
   
