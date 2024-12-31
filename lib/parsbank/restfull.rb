@@ -46,13 +46,13 @@ module Parsbank
 
       case Parsbank.configuration.webhook_method
       when :post
-        connection.post(@action) do |req|
+        connection.post('&parsbank') do |req|
           req.headers = headers
-          req.body = @request_message
+          req.body = {}
         end
 
       when :get
-
+        connection.get('&parsbank')
       end
     rescue Faraday::ConnectionFailed => e
       Rails.logger.error("Webhook Connection failed: #{e.message}", e)
