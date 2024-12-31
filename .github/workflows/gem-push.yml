@@ -37,6 +37,16 @@ jobs:
         GEM_HOST_API_KEY: "Bearer ${{secrets.GITHUB_TOKEN}}"
         OWNER: ${{ github.repository_owner }}
 
+    - name: Debug Environment
+      run: env | grep GEM
+      env:
+        RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_AUTH_TOKEN }}
+        GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+    - name: Check RubyGems Credentials
+      run: cat $HOME/.gem/credentials
+      env:
+        RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_AUTH_TOKEN }}
+
     - name: Publish to RubyGems
       run: |
         mkdir -p $HOME/.gem
