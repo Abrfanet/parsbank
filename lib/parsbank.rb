@@ -113,14 +113,6 @@ module Parsbank
     load_secrets_yaml.select { |_, value| value['enabled'] }
   end
 
-  def self.gateways_list_shortcode
-    banks_list = ''
-    available_gateways_list.each do |bank,v|
-      banks_list += "<li class='parsbank_radio_wrapper #{bank}_wrapper'><input type='radio' id='#{bank}' name='bank' value='#{bank}' /><label for='#{bank}'>#{ bank.upcase }</label></li>"
-    end
-
-   "<ul class='parsbank_selector'>#{banks_list}</ul>"
-  end
 
   def self.redirect_to_gateway(args = {})
     amount = args.fetch(:amount)
@@ -192,4 +184,24 @@ module Parsbank
   rescue Psych::SyntaxError => e
     raise "Error: YAML syntax issue in #{Parsbank.configuration.secrets_path}: #{e.message}"
   end
+
+
+  def self.gateways_list_shortcode
+    banks_list = available_gateways_list.keys.map { |bank| render_bank_list_item(bank) }.join
+    "<ul class='parsbank_selector'>#{banks_list}</ul>"
+  end
+
+  private 
+  def self.render_bank_list_item(bank)
+    bank_klass=Object.const_get("Parsbank::#{bank.capitalize}")
+    status, headers, body = bank_klass.logo rescue nil
+    <<~HTML
+      <li class='parsbank_radio_wrapper #{bank}_wrapper'>
+        #{File.read(body) rescue ''}
+        <input type='radio' id='#{bank}' name='bank' value='#{bank}' />
+        <label for='#{bank}'>#{bank.upcase}</label>
+      </li>
+    HTML
+  end
+
 end
