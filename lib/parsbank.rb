@@ -10,7 +10,6 @@ require 'parsbank/zarinpal/zarinpal'
 require 'parsbank/zibal/zibal'
 require 'configuration'
 
-
 # Main Module
 module Parsbank
   class Error < StandardError; end
@@ -18,68 +17,83 @@ module Parsbank
   $SUPPORTED_PSP = [
     'asanpardakht': {
       'name': 'Asan Pardakht CO.',
-      'website': 'http://asanpardakht.ir'
+      'website': 'http://asanpardakht.ir',
+      'tags': %w[iranian-psp ir rial]
     },
     'damavand': {
       'name': 'Electronic Card Damavand CO.',
-      'website': 'http://ecd-co.ir'
+      'website': 'http://ecd-co.ir',
+      'tags': %w[iranian-psp ir rial]
     },
     'mellat': {
       'name': 'Behpardakht Mellat CO.',
-      'website': 'http://behpardakht.com'
+      'website': 'http://behpardakht.com',
+      'tags': %w[iranian-psp ir rial]
     },
     'pep': {
       'name': 'Pasargad CO.',
-      'website': 'http://pep.co.ir'
+      'website': 'http://pep.co.ir',
+      'tags': %w[iranian-psp ir rial]
     },
 
     'sep': {
       'name': 'Saman Bank CO.',
-      'website': 'http://sep.ir'
+      'website': 'http://sep.ir',
+      'tags': %w[iranian-psp ir rial]
     },
     'pna': {
       'name': 'Pardakht Novin Arian CO.',
-      'website': 'http://pna.co.ir'
+      'website': 'http://pna.co.ir',
+      'tags': %w[iranian-psp ir rial]
     },
     'pec': {
       'name': 'Parsian Bank CO.',
-      'website': 'http://pec.ir'
+      'website': 'http://pec.ir',
+      'tags': %w[iranian-psp ir rial]
     },
 
     'sadad': {
       'name': 'Sadad Bank CO.',
-      'website': 'http://sadadco.‌com'
+      'website': 'http://sadadco.‌com',
+      'tags': %w[iranian-psp ir rial]
     },
     'sayan': {
       'name': 'Sayan Card CO.',
-      'website': 'http://sayancard.ir'
+      'website': 'http://sayancard.ir',
+      'tags': %w[iranian-psp ir rial]
     },
 
     'fanava': {
       'name': 'Fan Ava Card CO.',
-      'website': 'http://fanavacard.com'
+      'website': 'http://fanavacard.com',
+      'tags': %w[iranian-psp ir rial]
     },
     'kiccc': {
       'name': 'IranKish CO.',
-      'website': 'http://kiccc.com'
+      'website': 'http://kiccc.com',
+      'tags': %w[iranian-psp ir rial]
     },
 
     'sepehr': {
       'name': 'Sepehr Bank CO.',
-      'website': 'http://www.sepehrpay.com'
+      'website': 'http://www.sepehrpay.com',
+      'tags': %w[iranian-psp ir rial]
     },
 
     'zarinpal': {
       'name': 'Zarinpal',
-      'website': 'http://www.sepehrpay.com'
+      'website': 'http://www.sepehrpay.com',
+      'tags': %w[iranian-psp ir rial]
     },
     'zibal': {
       'name': 'Zibal',
-      'website': 'http://zibal.ir'
+      'website': 'http://zibal.ir',
+      'tags': %w[iranian-psp ir rial]
     },
     'bscbitcoin': {
       'name': 'Binance Bitcoin',
-      'website': 'https://bitcoin.org'
+      'website': 'https://bitcoin.org',
+      'tags': %w[btc bitcoin binance bsc crypto]
     }
   ]
   class << self
@@ -99,49 +113,52 @@ module Parsbank
     load_secrets_yaml.select { |_, value| value['enabled'] }
   end
 
-  def self.redirect_to_gateway(amount:, bank:, description:)
+  def self.redirect_to_gateway(args = {})
+    amount = args.fetch(:amount)
+    bank = args.fetch(:bank, 'random-irr-gates')
+    description = args.fetch(:description, '')
+
     selected_bank = available_gateways_list.select { |k| k == bank }
-    raise "Bank not enabled or not found: #{bank}" unless selected_bank.present?
-    
+    raise "Bank not enabled or not exists on bank_secrets.yml: #{bank}" unless selected_bank.present?
 
     default_callback = Parsbank.configuration.callback_url + "&bank_name=#{bank}"
 
     case bank
     when 'mellat'
-     mellat_klass= Parsbank::Mellat.new(
+      mellat_klass = Parsbank::Mellat.new(
         amount: amount,
         additional_data: description,
         callback_url: selected_bank['mellat']['callback_url'] || default_callback,
         orderId: rand(1...9999)
       )
       mellat_klass.call
-      result= mellat_klass.redirect_form
+      result = mellat_klass.redirect_form
 
     when 'zarinpal'
-      zarinpal_klass= Parsbank::Zarinpal.new(
+      zarinpal_klass = Parsbank::Zarinpal.new(
         amount: amount,
         additional_data: description,
         callback_url: selected_bank['zarinpal']['callback_url'] || default_callback
       )
       zarinpal_klass.call
-      result= zarinpal_klass.redirect_form
+      result = zarinpal_klass.redirect_form
 
     when 'zibal'
-      zibal_klass= Parsbank::Zibal.new(
+      Parsbank::Zibal.new(
         amount: amount,
         additional_data: description,
         callback_url: selected_bank['zibal']['callback_url'] || default_callback
       )
       zarinpal_klass.call
-      result= zarinpal_klass.redirect_form
+      result = zarinpal_klass.redirect_form
     when 'bscbitcoin'
-      bscbitcoin_klass= Parsbank::BscBitcoin.new(
+      bscbitcoin_klass = Parsbank::BscBitcoin.new(
         additional_data: description
       )
-      result= bscbitcoin_klass.generate_payment_address(amount: amount)
+      result = bscbitcoin_klass.generate_payment_address(amount: amount)
     end
 
-    return result
+    result
   end
 
   def self.load_secrets_yaml
