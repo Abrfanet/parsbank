@@ -34,7 +34,12 @@ module Parsbank
     private
 
     def webhook(_message)
-      connection = Faraday.new(Parsbank.configuration.webhook) do |conn|
+     webhook_url = Parsbank.configuration.webhook
+
+     webhook_url.gsub!('MESSAGE', _message) if Parsbank.configuration.webhook_method == :get
+     webhook_url.gsub!('TITLE', "Webhook of Connection Error at #{Time.now}") if Parsbank.configuration.webhook_method == :get
+
+      connection = Faraday.new() do |conn|
         conn.request :json if @response_type == :json # Automatically converts payload to JSON
         conn.response :json if @response_type == :json # Automatically parses JSON response
         conn.adapter Faraday.default_adapter

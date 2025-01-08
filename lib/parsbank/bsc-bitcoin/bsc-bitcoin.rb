@@ -4,15 +4,14 @@ require 'openssl'
 require 'base64'
 
 module Parsbank
-  class Binance
-    API_BASE_URL = 'https://api.binance.com'
+  class BscBitcoin
 
-    attr_accessor :api_key, :secret_key
+    attr_accessor :api_key, :secret_key, :endpoint
 
     def initialize(args = {})
-      @api_key = args.fetch(:api_key)
-      @secret_key = args.fetch(:secret_key)
-      @connection = Faraday.new(API_BASE_URL) do |conn|
+      @api_key = args.fetch(:api_key, default_config(:api_key))
+      @secret_key = args.fetch(:secret_key, default_config(:secret_key))
+      @connection = Faraday.new(default_config(:endpoint)) do |conn|
         conn.request :json
         conn.response :json, content_type: 'application/json'
         conn.adapter Faraday.default_adapter
@@ -57,6 +56,9 @@ module Parsbank
 
     private
 
+    def default_config(key)
+      Parsbank.load_secrets_yaml[self.class.name.split('::').last.downcase][key.to_s]
+    end
     # Helper method to handle signed requests
     def signed_request(http_method, endpoint, params = {})
       params[:timestamp] = current_timestamp

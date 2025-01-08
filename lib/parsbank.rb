@@ -4,7 +4,7 @@ require 'yaml'
 require 'savon'
 require 'parsbank/version'
 require 'parsbank/restfull'
-require 'parsbank/binance/binance'
+require 'parsbank/bsc-bitcoin/bsc-bitcoin'
 require 'parsbank/mellat/mellat'
 require 'parsbank/zarinpal/zarinpal'
 require 'parsbank/zibal/zibal'
@@ -77,8 +77,8 @@ module Parsbank
       'name': 'Zibal',
       'website': 'http://zibal.ir'
     },
-    'bitcoin': {
-      'name': 'Bitcoin',
+    'bscbitcoin': {
+      'name': 'Binance Bitcoin',
       'website': 'https://bitcoin.org'
     }
   ]
