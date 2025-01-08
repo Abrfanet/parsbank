@@ -127,10 +127,20 @@ module Parsbank
       result= zarinpal_klass.redirect_form
 
     when 'zibal'
-    
+      zibal_klass= Parsbank::Zibal.new(
+        amount: amount,
+        additional_data: description,
+        callback_url: selected_bank['zibal']['callback_url'] || default_callback
+      )
+      zarinpal_klass.call
+      result= zarinpal_klass.redirect_form
+    when 'bscbitcoin'
+      bscbitcoin_klass= Parsbank::BscBitcoin.new(
+        additional_data: description
+      )
+      result= bscbitcoin_klass.generate_payment_address(amount: amount)
     end
 
-    
     return result
   end
 

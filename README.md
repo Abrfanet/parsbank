@@ -82,6 +82,26 @@ end
 ```
 
 
+
+# ParsBank Amazing Web
+With ParsBank Web You Can Access To Your Transactions and Config Files Visualy! Also You Get Beautifull Dashboard with Canva Graph For Analysis Your Transaction And Improve Your Campiagn And Important Decisions ⭐
+
+```
+Important Note: When Use ParsBank Web you should apply CIS rules and all harening rules for secure your credentials of banks and virtuals account like binance.
+```
+
+Get Ready For ParsBank Web Gem:
+
+## Method 1 (Isolated Dockerfile)
+Requrements:
+    - Docker
+    - Nginx or Apache Reverse Proxy for forward trafik to specific port
+    - ParsBank Web use sinatra with Concurency so needs considerable resource like RAM, CPU or next-gen of Hard Drive
+in first step clone git repository `git clone https://github.com/Abrfanet/parsbank-web`
+
+
+## Method 2 (Inside of Rails App)
+
 ## Development
 
 We don't accept any pull request, just use issue section
