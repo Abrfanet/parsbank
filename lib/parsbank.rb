@@ -113,6 +113,15 @@ module Parsbank
     load_secrets_yaml.select { |_, value| value['enabled'] }
   end
 
+  def self.gateways_list_shortcode
+    banks_list = ''
+    available_gateways_list.each do |bank,v|
+      banks_list += "<li class='parsbank_radio_wrapper #{bank}_wrapper'><input type='radio' id='#{bank}' name='bank' value='#{bank}' /><label for='#{bank}'>#{ bank.upcase }</label></li>"
+    end
+
+   "<ul class='parsbank_selector'>#{banks_list}</ul>"
+  end
+
   def self.redirect_to_gateway(args = {})
     amount = args.fetch(:amount)
     bank = args.fetch(:bank, 'random-irr-gates')
