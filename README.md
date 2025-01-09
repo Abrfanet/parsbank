@@ -53,7 +53,6 @@ ParsBank.configuration do |config|
   config.webhook_method = 'GET'                        # Webhook HTTP method (GET or POST)
   config.mitm_server = 'https://your-mitm-server.com'  # MITM server location
   config.secrets_path = Rails.root.join('config/bank_secrets.yaml') # Path to bank credentials (e.g., merchant ID, tokens)
-  config.min_amount = 10_000                           # Minimum amount in Rials
 
   # Web Panel Configuration
   config.webpanel_path = '/parsbank'                   # Web panel path

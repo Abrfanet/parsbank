@@ -27,10 +27,11 @@ Gem::Specification.new do |spec|
     end
   end
 
-  spec.add_dependency 'activerecord', '>= 7.0.8'
-  spec.add_dependency 'faraday', '>= 2.8.1'
-  spec.add_dependency 'faraday_middleware', '>= 2.1.0'
-  spec.add_dependency 'savon', '>= 2.13.0'
+  spec.add_dependency 'activerecord'
+  spec.add_dependency 'faraday'
+  spec.add_dependency 'faraday_middleware'
+  spec.add_dependency 'savon'
+
 
   spec.bindir = 'exe'
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
