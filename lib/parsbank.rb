@@ -197,9 +197,9 @@ module Parsbank
     status, headers, body = bank_klass.logo rescue nil
     <<~HTML
       <li class='parsbank_radio_wrapper #{bank}_wrapper'>
-        #{File.read(body) rescue ''}
+        
         <input type='radio' id='#{bank}' name='bank' value='#{bank}' />
-        <label for='#{bank}'>#{bank.upcase}</label>
+        <label for='#{bank}'>#{File.read(body) rescue ''} #{bank.upcase}</label>
       </li>
     HTML
   end

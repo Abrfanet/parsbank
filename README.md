@@ -1,111 +1,128 @@
 # ParsBank
 ==============
 
-[![Gem Version](https://badge.fury.io/rb/parsbank.svg)](https://rubygems.org/gems/parsbank)
-![Build](https://github.com/abrfanet/ParsBank/workflows/CI/badge.svg)
+[![Gem Version](https://badge.fury.io/rb/parsbank.svg)](https://rubygems.org/gems/parsbank)  
+![Build Status](https://github.com/abrfanet/ParsBank/workflows/CI/badge.svg)
 
+**ParsBank Gateway** is a Ruby gem designed to integrate with WSDL and JSON APIs of Persian banks, cryptocurrency platforms (e.g., Bitcoin, USDT), and traditional payment platforms like Stripe and PayPal. This gem leverages **SOAP** and **Faraday** libraries, optimized for multiple retries during connection failures or timeouts. Additionally, it includes a proxy wrapper for connecting to core banks via MITM (man-in-the-middle) servers.
 
-ParsBank Gateway
-
-An Ruby Gem Library for integrate with WSDL and JSON of Persian Banks, In this Gem we use soap and faraday lib as main dependency also we tunned soap/faraday for multile retries when failed connections or request, in the end we work on proxy wrapper for connct to core bank with MITM server 
+---
 
 ## Installation
 
-Install the gem and add to the application's Gemfile by executing:
+### Using Bundler
+Add ParsBank to your application's Gemfile and install it with:
 
-    $ bundle add ParsBank
+```bash
+$ bundle add ParsBank
+```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+### Without Bundler
+Install the gem directly:
 
-    $ gem install ParsBank
+```bash
+$ gem install ParsBank
+```
 
-In sinatra application just add `gem "ParsBank"` on your Gemfile and install with `bundle install`
+### For Sinatra Applications
+Include the gem in your Gemfile:
+
+```ruby
+gem "ParsBank"
+```
+
+Then install it with:
+
+```bash
+$ bundle install
+```
+
+---
 
 ## Usage
 
-First step:
+### Step 1: Configure ParsBank
+Create a configuration file in `config/initializers` (e.g., `config/initializers/pars_bank.rb`):
 
-in config/initilizers create new config file:
-```
-#config/initilizers/pars_bank.rb
-
-
+```ruby
 ParsBank.configuration do |config|
+  config.callback_url = 'https://example.com/CallBack' # Your callback URL
+  config.debug = false                                 # Enable logging (Rails logs and STDOUT)
+  config.sandbox = false                               # Simulate requests and auto-approve callbacks
+  config.webhook = 'https://yoursite.com/income-webhook?title=TITLE&message=MESSAGE' # Transaction notification webhook
+  config.webhook_method = 'GET'                        # Webhook HTTP method (GET or POST)
+  config.mitm_server = 'https://your-mitm-server.com'  # MITM server location
+  config.secrets_path = Rails.root.join('config/bank_secrets.yaml') # Path to bank credentials (e.g., merchant ID, tokens)
+  config.min_amount = 10_000                           # Minimum amount in Rials
 
-    config.callback_url = 'YOUR CALLBACK LOCATION LIKE https://example.com/CallBack'
-
-    config.debug = false # Enable Log Tracking with Rails.log and STDOUT
-
-    config.sandbox = false # Enable Simulation for your requst also approve callback without verification
-
-    config.webhook = "https://yoursite.com/income-webhook?title=TITLE&message=MESSAGE" # Webhook for notify any success transactions or errors on cominiucate with Core Bank
-    config.webhook_method = 'GET' # or POST 
-
-    config.mitm_server = 'YOUR_MITM_SERVER_LOCATION as HTTP or HTTPS'
-
-    config.secrets_path = Rails.root.join('config/bank_secrets.yaml') #PATH OF YOUR BANKS CREDITS like merchant id, username, password or token
-
-    config.min_amount = '10000' # as rials
-
-    # WebPanel Config
-    config.webpanel_path = '/parsbank'
-    ## Basic Authentication
-    config.username = ENV['PARSBANK_USERNAME']
-    config.password = ENV['PARSBANK_PASSWORD']
-    ## Authetication With IP source
-    config.allowed_ips = ['192.168.10.10'] # add * to allow all ip
-    ## Authentication with rails model
-    config.allow_when = User.find_by(username: USERNAME).authenticate(PASSWORD) && User.find_by(username: USERNAME).admin?
-
-    # Secure by captcha
-    config.captcha = false
-
-    # Model for store transactions
-    # Transaction model should have amount, status, bank_name, callback_url, authority_code or anything you need
-    config.model = Transaction 
-    
-
-end
-
-```
-
-
-Inside of your controller call Token action and get url for redirect user to Gateway page
-
-```
-class ApplicationController > Cart 
-    def redirect_to_ParsBank
-        form = ParsBank.get_redirect_from(amount: 100000, description: 'Charge Account')
-        render html: form
-    end
+  # Web Panel Configuration
+  config.webpanel_path = '/parsbank'                   # Web panel path
+  config.username = ENV['PARSBANK_USERNAME']           # Web panel username
+  config.password = ENV['PARSBANK_PASSWORD']           # Web panel password
+  config.allowed_ips = ['192.168.10.10']               # Restrict access by IP (use '*' to allow all)
+  config.allow_when = ->(username, password) {         # Authentication using a Rails model
+    user = User.find_by(username: username)
+    user&.authenticate(password) && user.admin?
+  }
+  config.captcha = false                               # Enable CAPTCHA for security
+  config.model = Transaction                          # Define transaction model (must include fields like amount, status, etc.)
 end
 ```
 
+---
 
+### Step 2: Use ParsBank in Your Controller
 
-# ParsBank Amazing Web
-With ParsBank Web You Can Access To Your Transactions and Config Files Visualy! Also You Get Beautifull Dashboard with Canva Graph For Analysis Your Transaction And Improve Your Campiagn And Important Decisions ⭐
+Use the `get_redirect_from` method to generate a redirect form for users:
 
+```ruby
+class CartController < ApplicationController
+  def redirect_to_parsbank
+    form = ParsBank.get_redirect_from(amount: 100_000, description: 'Charge Account')
+    render html: form
+  end
+end
 ```
-Important Note: When Use ParsBank Web you should apply CIS rules and all harening rules for secure your credentials of banks and virtuals account like binance.
-```
 
-Get Ready For ParsBank Web Gem:
+---
 
-## Method 1 (Isolated Dockerfile)
-Requrements:
-    - Docker
-    - Nginx or Apache Reverse Proxy for forward trafik to specific port
-    - ParsBank Web use sinatra with Concurency so needs considerable resource like RAM, CPU or next-gen of Hard Drive
-in first step clone git repository `git clone https://github.com/Abrfanet/parsbank-web`
+## ParsBank Amazing Web
 
+ParsBank comes with a built-in **web dashboard** for managing transactions and configurations visually. The dashboard includes:
+- A beautiful interface with **Canva graphs** for transaction analysis.
+- Tools for campaign improvements and data-driven decisions.
 
-## Method 2 (Inside of Rails App)
+### Security Notice
+Ensure that you apply CIS and other hardening rules to secure your bank credentials and virtual accounts (e.g., Binance) when using ParsBank Web.
+
+---
+
+### Setup for ParsBank Web
+
+#### Method 1: Isolated Docker Container
+**Requirements**:
+- Docker
+- Nginx or Apache (for reverse proxy)
+- Resources: Adequate CPU, RAM, and modern storage for concurrent operations.
+
+**Steps**:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Abrfanet/parsbank-web
+   ```
+2. Follow the repository's setup instructions.
+
+#### Method 2: Inside a Rails Application
+Include the web dashboard gem in your Rails app (refer to ParsBank Web documentation).
+
+---
 
 ## Development
 
-We don't accept any pull request, just use issue section
+We currently do not accept pull requests. Please report any issues in the [GitHub Issues section](https://github.com/abrfanet/ParsBank/issues).
+
+---
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/ParsBank.
+Bug reports and feature requests are welcome at [ParsBank GitHub repository](https://github.com/abrfanet/ParsBank).
