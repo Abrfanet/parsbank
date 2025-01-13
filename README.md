@@ -118,7 +118,7 @@ Include the web dashboard gem in your Rails app (refer to ParsBank Web documenta
 
 ## 👨🏻‍💻 Development
 
-We currently do not accept pull requests. Please report any issues in the [GitHub Issues section](https://github.com/abrfanet/ParsBank/issues).
+We currently do not accept pull requests. Please report any issues in the [GitHub Issues section](https://github.com/abrfanet/ParsBank/issues). Also If you live in countries with specific payment systems, such as Russia (MIR Card), Germany, Turkey (Troy Card), or others, we warmly welcome you to join us as a developer or contributor. Your expertise and perspective can help us better support diverse payment ecosystems(We support you with PAGs users & CPC ⭐).
 
 ---
 
@@ -137,7 +137,7 @@ If you find this project helpful and would like to support its development, cons
 
 
 
-### 🚀 Premium Features
+## 🚀 Premium Features
 
 This project offers **premium features** to enhance your experience and support ongoing development. By contributing, you'll gain access to advanced capabilities while helping sustain and improve this project. 🙌
 
