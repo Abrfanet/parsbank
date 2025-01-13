@@ -116,11 +116,50 @@ Include the web dashboard gem in your Rails app (refer to ParsBank Web documenta
 
 ---
 
-## Development
+## 👨🏻‍💻 Development
 
 We currently do not accept pull requests. Please report any issues in the [GitHub Issues section](https://github.com/abrfanet/ParsBank/issues).
 
 ---
+
+## 💖 Support This Project
+
+If you find this project helpful and would like to support its development, consider making a donation. Your contributions help maintain and improve this project. Thank you for your generosity! 🙏
+
+### Donate USDT (Tether)
+- **USDT (ERC-20):** `0x2028f409a42413076665231e209896bbe0221d64`
+- **USDT (TRC-20):** `TNtLkdy2FAKKBGJ4F8ij2mppWpjkB8GULy`
+- **USDT (BEP-20):** `0x2028f409a42413076665231e209896bbe0221d64`
+
+
+### Donate BTC (Bitcoin)
+- **BSC (BEP-20):** `0x2028f409a42413076665231e209896bbe0221d64`
+
+
+
+### 🚀 Premium Features
+
+This project offers **premium features** to enhance your experience and support ongoing development. By contributing, you'll gain access to advanced capabilities while helping sustain and improve this project. 🙌
+
+#### 🔐 How to Access Premium Features
+1. **Make a Contribution**: 
+   - Pay 29 USDT to one of the wallet addresses below(Annualy).
+2. **Send Proof of Payment**: 
+   - Email your transaction details to `info@abrfa.net` or submit them via a dedicated contact form.
+3. **Receive Access**: 
+   - Upon verification, you'll receive instructions to access the premium features.
+
+#### 💳 USDT Wallet Addresses
+- **USDT (ERC-20):** `0x2028f409a42413076665231e209896bbe0221d64`
+- **USDT (TRC-20):** `TNtLkdy2FAKKBGJ4F8ij2mppWpjkB8GULy`
+
+#### 🔥 Available Premium Features
+- Feature 1: **Advanced Analytics**  
+- Feature 2: **Customizable Reports**  
+- Feature 3: **Priority Support**
+- Feature 4: **ParsBank Web Access**
+
+> **Note**: Contributions are used to maintain and improve this project. Thank you for your support! 🙏
 
 ## Contributing
 
