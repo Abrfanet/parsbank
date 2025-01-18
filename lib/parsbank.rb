@@ -113,24 +113,34 @@ module Parsbank
     load_secrets_yaml.select { |_, value| value['enabled'] }
   end
 
-
   def self.redirect_to_gateway(args = {})
-    amount = args.fetch(:amount)
-    bank = args.fetch(:bank, 'random-irr-gates')
-    description = args.fetch(:description, '')
-
+    bank = args.fetch(:bank, available_gateways_list.sample)
     selected_bank = available_gateways_list.select { |k| k == bank }
-    raise "Bank not enabled or not exists on bank_secrets.yml: #{bank}" unless selected_bank.present?
+    unless selected_bank.present?
+      raise "Bank not enabled or not exists in #{Parsbank.configuration.secrets_path}: #{bank}"
+    end
 
-    default_callback = Parsbank.configuration.callback_url + "&bank_name=#{bank}"
+    description = args.fetch(:description)
+    default_callback = "#{selected_bank[bank.to_s]['callback_url'] || Parsbank.configuration.callback_url}&bank_name=#{bank}"
+
+    crypto_amount = args.fetch(:crypto_amount) if args.key?(:crypto_amount)
+    fiat_amount = args.fetch(:fiat_amount) if args.key?(:fiat_amount)
+    real_amount = args.fetch(:real_amount) if args.key?(:real_amount)
+
+    if crypto_amount.nil? && fiat_amount.nil? && real_amount.nil?
+      raise 'Amount fileds is emptey: crypto_amount OR fiat_amount OR real_amount'
+    end
+
+    transaction = Parsbank.configuration.model
+    transaction.create(description: description)
 
     case bank
     when 'mellat'
       mellat_klass = Parsbank::Mellat.new(
-        amount: amount,
+        amount: args.fetch(:amount),
         additional_data: description,
-        callback_url: selected_bank['mellat']['callback_url'] || default_callback,
-        orderId: rand(1...9999)
+        callback_url: default_callback,
+        orderId: transaction.id
       )
       mellat_klass.call
       result = mellat_klass.redirect_form
@@ -139,7 +149,7 @@ module Parsbank
       zarinpal_klass = Parsbank::Zarinpal.new(
         amount: amount,
         additional_data: description,
-        callback_url: selected_bank['zarinpal']['callback_url'] || default_callback
+        callback_url: default_callback
       )
       zarinpal_klass.call
       result = zarinpal_klass.redirect_form
@@ -148,7 +158,7 @@ module Parsbank
       Parsbank::Zibal.new(
         amount: amount,
         additional_data: description,
-        callback_url: selected_bank['zibal']['callback_url'] || default_callback
+        callback_url: default_callback
       )
       zarinpal_klass.call
       result = zarinpal_klass.redirect_form
@@ -156,6 +166,8 @@ module Parsbank
       bscbitcoin_klass = Parsbank::BscBitcoin.new(
         additional_data: description
       )
+      convert_real_amount_to_assets if crypto_amount.nil? && args.key?(:real_amount)
+
       result = bscbitcoin_klass.generate_payment_address(amount: amount)
     end
 
@@ -185,23 +197,28 @@ module Parsbank
     raise "Error: YAML syntax issue in #{Parsbank.configuration.secrets_path}: #{e.message}"
   end
 
-
   def self.gateways_list_shortcode
     banks_list = available_gateways_list.keys.map { |bank| render_bank_list_item(bank) }.join
     "<ul class='parsbank_selector'>#{banks_list}</ul>"
   end
 
-  private 
   def self.render_bank_list_item(bank)
-    bank_klass=Object.const_get("Parsbank::#{bank.capitalize}")
-    status, headers, body = bank_klass.logo rescue nil
+    bank_klass = Object.const_get("Parsbank::#{bank.capitalize}")
+    _, _, body = begin
+      bank_klass.logo
+    rescue StandardError
+      nil
+    end
     <<~HTML
       <li class='parsbank_radio_wrapper #{bank}_wrapper'>
-        
+      #{'  '}
         <input type='radio' id='#{bank}' name='bank' value='#{bank}' />
-        <label for='#{bank}'>#{File.read(body) rescue ''} #{bank.upcase}</label>
+        <label for='#{bank}'>#{begin
+          File.read(body)
+        rescue StandardError
+          ''
+        end} #{bank.upcase}</label>
       </li>
     HTML
   end
-
 end
