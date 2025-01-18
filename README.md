@@ -4,7 +4,7 @@
 [![Gem Version](https://badge.fury.io/rb/parsbank.svg)](https://rubygems.org/gems/parsbank)  
 ![Build Status](https://github.com/abrfanet/ParsBank/workflows/CI/badge.svg)
 
-**ParsBank Gateway** is a Ruby gem designed to integrate with WSDL and JSON APIs of Persian banks, cryptocurrency platforms (e.g., Bitcoin, USDT), and traditional payment platforms like Stripe and PayPal. This gem leverages **SOAP** and **Faraday** libraries, optimized for multiple retries during connection failures or timeouts. Additionally, it includes a proxy wrapper for connecting to core banks via MITM (man-in-the-middle) servers.
+**ParsBank Gateway** is a Ruby gem designed to integrate with WSDL and JSON APIs of all payments methods such as cryptocurrency platforms (e.g., Bitcoin, USDT), and traditional payment platforms like Stripe and PayPal or private banks such as Troy bank or persians banks. This gem leverages **SOAP** and **Faraday** libraries, optimized for multiple retries during connection failures or timeouts. Additionally, it includes a proxy wrapper for connecting to core banks via MITM (man-in-the-middle) servers.
 
 ---
 
@@ -76,10 +76,39 @@ Use the `get_redirect_from` method to generate a redirect form for users:
 
 ```ruby
 class CartController < ApplicationController
+  # @INPUT fiat_amount: can be dollars or rials
+  # @INPUT crypto_amount: can be crypto assets amount like 0.0005
+  # @INPUT real_amount: When use crypto or Rials can use dollar instead amount of crypto (E.G 100 dollar equal 0.005 bitcoin)
+  # @INPUT description(required): Explain transaction details
+  # @INPUT bank: Select specific bank or payment method like 'bsc-binance', 'nobitex', 'zarinpal', 'perfect-money'
+  # @INPUT tags: Used for call which payments method such as ['crypto','rls','dollar','persian-banks','russian-banks']
+  # @OUTPUT get_redirect_from: an javascript code for redirect user to gateways
   def redirect_to_parsbank
-    form = ParsBank.get_redirect_from(amount: 100_000, description: 'Charge Account')
+    form = ParsBank.get_redirect_from(fiat_amount: '10', description: 'Charge Account')
     render html: form
   end
+
+  # @DESC: Shortcode for get all of enabled paymetns methods
+  # @INPUT tags(Optional): ['crypto','rls','dollar','persian-banks','russian-banks']
+  # @OUTPUT gateways_list_shortcode: List of all banks with name and logo with ul wrapper as html
+  def choose_payment
+    @payments_list_available_shortcode = ParsBank.gateways_list_shortcode
+  end
+
+  # @DESC: Parse all returned params from banks for verify transaction
+  # @OUTPUT verify_transaction: Return transaction status as json like {status: 200, message: 'Payment Successfull'}
+  def callback
+    @parsbank_verifier= ParsBank.verify_transaction
+    if @parsbank_verifier[:status] == 200
+      flash[:success]= @parsbank_verifier[:message]
+      redirect_to Something_path
+    else
+      flash[:error]= @parsbank_verifier[:message]
+      redirect_to Something_path
+    end
+  end
+
+
 end
 ```
 
