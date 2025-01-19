@@ -15,88 +15,8 @@ require 'configuration'
 module Parsbank
   class Error < StandardError; end
 
-  $SUPPORTED_PSP = [
-    'asanpardakht': {
-      'name': 'Asan Pardakht CO.',
-      'website': 'http://asanpardakht.ir',
-      'tags': %w[iranian-psp ir rial]
-    },
-    'damavand': {
-      'name': 'Electronic Card Damavand CO.',
-      'website': 'http://ecd-co.ir',
-      'tags': %w[iranian-psp ir rial]
-    },
-    'mellat': {
-      'name': 'Behpardakht Mellat CO.',
-      'website': 'http://behpardakht.com',
-      'tags': %w[iranian-psp ir rial]
-    },
-    'pep': {
-      'name': 'Pasargad CO.',
-      'website': 'http://pep.co.ir',
-      'tags': %w[iranian-psp ir rial]
-    },
-
-    'sep': {
-      'name': 'Saman Bank CO.',
-      'website': 'http://sep.ir',
-      'tags': %w[iranian-psp ir rial]
-    },
-    'pna': {
-      'name': 'Pardakht Novin Arian CO.',
-      'website': 'http://pna.co.ir',
-      'tags': %w[iranian-psp ir rial]
-    },
-    'pec': {
-      'name': 'Parsian Bank CO.',
-      'website': 'http://pec.ir',
-      'tags': %w[iranian-psp ir rial]
-    },
-
-    'sadad': {
-      'name': 'Sadad Bank CO.',
-      'website': 'http://sadadco.‌com',
-      'tags': %w[iranian-psp ir rial]
-    },
-    'sayan': {
-      'name': 'Sayan Card CO.',
-      'website': 'http://sayancard.ir',
-      'tags': %w[iranian-psp ir rial]
-    },
-
-    'fanava': {
-      'name': 'Fan Ava Card CO.',
-      'website': 'http://fanavacard.com',
-      'tags': %w[iranian-psp ir rial]
-    },
-    'kiccc': {
-      'name': 'IranKish CO.',
-      'website': 'http://kiccc.com',
-      'tags': %w[iranian-psp ir rial]
-    },
-
-    'sepehr': {
-      'name': 'Sepehr Bank CO.',
-      'website': 'http://www.sepehrpay.com',
-      'tags': %w[iranian-psp ir rial]
-    },
-
-    'zarinpal': {
-      'name': 'Zarinpal',
-      'website': 'http://www.sepehrpay.com',
-      'tags': %w[iranian-psp ir rial]
-    },
-    'zibal': {
-      'name': 'Zibal',
-      'website': 'http://zibal.ir',
-      'tags': %w[iranian-psp ir rial]
-    },
-    'bscbitcoin': {
-      'name': 'Binance Bitcoin',
-      'website': 'https://bitcoin.org',
-      'tags': %w[btc bitcoin binance bsc crypto]
-    }
-  ]
+  $SUPPORTED_PSP = JSON.parse(File.read(File.join(__dir__, 'psp.json')))
+  
   class << self
     attr_accessor :configuration
   end
@@ -126,7 +46,7 @@ module Parsbank
   def self.initialize!
     if Parsbank.configuration.database_url.present?
       establish_connection
-    else    
+    else
       puts "\033[31mERROR: database_url not enabled, Transaction history not stored on database\033[0m"
     end
   end
@@ -237,10 +157,10 @@ module Parsbank
       raise "Error: Invalid format in #{Parsbank.configuration.secrets_path}. Expected a hash of bank secrets."
     end
 
-    supported_banks = $SUPPORTED_PSP[0].keys
+    supported_banks = $SUPPORTED_PSP.keys
 
     secrets.each_key do |bank_key|
-      unless supported_banks.include?(bank_key.to_sym)
+      unless supported_banks.include?(bank_key.to_s)
         raise "#{bank_key.capitalize} in #{Parsbank.configuration.secrets_path} is not supported by ParsBank. \nSupported Banks: #{supported_banks.join(', ')}"
       end
     end

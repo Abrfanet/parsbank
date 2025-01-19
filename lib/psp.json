@@ -1,0 +1,78 @@
+{
+    "asanpardakht": {
+      "name": "Asan Pardakht CO.",
+      "website": "http://asanpardakht.ir",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "damavand": {
+      "name": "Electronic Card Damavand CO.",
+      "website": "http://ecd-co.ir",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "mellat": {
+      "name": "Behpardakht Mellat CO.",
+      "website": "http://behpardakht.com",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "pep": {
+      "name": "Pasargad CO.",
+      "website": "http://pep.co.ir",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "sep": {
+      "name": "Saman Bank CO.",
+      "website": "http://sep.ir",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "pna": {
+      "name": "Pardakht Novin Arian CO.",
+      "website": "http://pna.co.ir",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "pec": {
+      "name": "Parsian Bank CO.",
+      "website": "http://pec.ir",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "sadad": {
+      "name": "Sadad Bank CO.",
+      "website": "http://sadadco.‌com",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "sayan": {
+      "name": "Sayan Card CO.",
+      "website": "http://sayancard.ir",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "fanava": {
+      "name": "Fan Ava Card CO.",
+      "website": "http://fanavacard.com",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "kiccc": {
+      "name": "IranKish CO.",
+      "website": "http://kiccc.com",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "sepehr": {
+      "name": "Sepehr Bank CO.",
+      "website": "http://www.sepehrpay.com",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "zarinpal": {
+      "name": "Zarinpal",
+      "website": "http://www.sepehrpay.com",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "zibal": {
+      "name": "Zibal",
+      "website": "http://zibal.ir",
+      "tags": ["iranian-psp", "ir", "rial"]
+    },
+    "bscbitcoin": {
+      "name": "Binance Bitcoin",
+      "website": "https://bitcoin.org",
+      "tags": ["btc", "bitcoin", "binance", "bsc", "crypto"]
+    }
+  }
+  
