@@ -12,7 +12,8 @@ class Configuration
                   :allowed_ips,
                   :allow_when,
                   :captcha,
-                  :model
+                  :model,
+                  :database_url
 
     def initialize
       @callback_url = nil
@@ -30,5 +31,6 @@ class Configuration
       @allow_when = -> { true }
       @captcha = false
       @model = nil
+      @database_url = nil
     end
   end

@@ -2,6 +2,7 @@
 
 require 'yaml'
 require 'savon'
+require 'active_support'
 require 'parsbank/version'
 require 'parsbank/restfull'
 require 'parsbank/bsc-bitcoin/bsc-bitcoin'
@@ -113,8 +114,51 @@ module Parsbank
     load_secrets_yaml.select { |_, value| value['enabled'] }
   end
 
+
+  def self.initialize_in_rails
+    return unless defined?(Rails)
+
+    ActiveSupport.on_load(:after_initialize) do
+      Parsbank.initialize!
+    end
+  end
+
+  def self.initialize!
+    if Parsbank.configuration.database_url.present?
+      establish_connection
+    else    
+      puts "\033[31mERROR: database_url not enabled, Transaction history not stored on database\033[0m"
+    end
+  end
+
+  def self.establish_connection
+    database_url = Parsbank.configuration.database_url
+    raise "DATABASE_URL environment variable is not set" if database_url.nil?
+    begin
+      ActiveRecord::Base.establish_connection(database_url)
+      unless ActiveRecord::Base.connection.table_exists?('transactions')
+        puts 'Create Transaction Table'
+        # This line will raise an exception if the table doesn't exist
+        ActiveRecord::Base.connection.create_table :transactions do |t|
+          t.string :gateway
+          t.string :amount
+          t.string :unit
+          t.string :track_id
+          t.string :local_id
+          t.integer :user_id
+          t.text :description
+          t.string :status
+          t.timestamps
+        end
+      end
+    rescue => e
+      raise "Failed to connect to the database: #{e.message}"
+    end
+
+  end
+
   def self.redirect_to_gateway(args = {})
-    bank = args.fetch(:bank, available_gateways_list.sample)
+    bank = args.fetch(:bank, available_gateways_list.keys.sample)
     selected_bank = available_gateways_list.select { |k| k == bank }
     unless selected_bank.present?
       raise "Bank not enabled or not exists in #{Parsbank.configuration.secrets_path}: #{bank}"
@@ -131,9 +175,20 @@ module Parsbank
       raise 'Amount fileds is emptey: crypto_amount OR fiat_amount OR real_amount'
     end
 
-    transaction = Parsbank.configuration.model
-    transaction.create(description: description)
+    if $SUPPORTED_PSP[bank.to_s]['tags'].include? 'crypto' && [crypto_amount, real_amount].compact.empty?
+      raise "#{bank} needs crypto_amount or real_amount"
+    end
 
+    if $SUPPORTED_PSP[bank.to_s]['tags'].include? 'rial' && [fiat_amount, real_amount].compact.empty?
+      raise "#{bank} needs fiat_amount or real_amount"
+    end
+
+    transaction = Object.const_get(Parsbank.configuration.model).create(
+      description: description,
+      getway: bank
+      )
+
+    puts transaction.id
     case bank
     when 'mellat'
       mellat_klass = Parsbank::Mellat.new(
@@ -222,3 +277,7 @@ module Parsbank
     HTML
   end
 end
+
+
+
+Parsbank.initialize_in_rails
