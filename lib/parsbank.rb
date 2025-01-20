@@ -2,6 +2,7 @@
 
 require 'yaml'
 require 'savon'
+require 'uri'
 require 'active_support'
 require 'parsbank/version'
 require 'parsbank/restfull'
@@ -47,7 +48,7 @@ module Parsbank
     if Parsbank.configuration.database_url.present?
       establish_connection
     else
-      puts "\033[31mERROR: database_url not enabled, Transaction history not stored on database\033[0m"
+      puts "\033[31mParsBank ERROR: database_url not set, Transaction history not stored on database\033[0m"
     end
   end
 
@@ -55,11 +56,32 @@ module Parsbank
     database_url = Parsbank.configuration.database_url
     model = Parsbank.configuration.model
     raise "DATABASE_URL environment variable is not set" if database_url.nil?
+
+    supported_databases = {
+      'postgresql' => 'pg',
+      'mysql2' => 'mysql2',
+      'sqlite3' => 'sqlite3',
+      'nulldb' => 'nulldb'
+      }.freeze
+
+    uri = URI.parse(database_url)
+
+    gem_name = supported_databases[uri.scheme]
+    unless gem_name
+      raise "Unsupported database adapter: #{uri.scheme}. Supported adapters: #{supported_databases.keys.join(', ')}"
+    end
+
+    begin
+      require gem_name
+    rescue LoadError
+      raise "Missing required gem for #{uri.scheme}. Please add `gem '#{gem_name}'` to your Gemfile."
+    end
+
     begin
       ActiveRecord::Base.establish_connection(database_url)
-      unless ActiveRecord::Base.connection.table_exists?(model.pluralize)
+      unless ActiveRecord::Base.connection.table_exists?(model.tableize)
         puts 'Create Transaction Table'
-        ActiveRecord::Base.connection.create_table model.pluralize.downcase do |t|
+        ActiveRecord::Base.connection.create_table model.tableize.downcase do |t|
           t.string :gateway
           t.string :amount
           t.string :unit
@@ -73,6 +95,13 @@ module Parsbank
           t.timestamps
         end
       end
+
+      unless Object.const_defined?(model)
+        Object.const_set(model, Class.new(ActiveRecord::Base) do
+          self.table_name = model.tableize
+        end)
+      end
+
     rescue => e
       raise "Failed to connect to the database: #{e.message}"
     end
@@ -107,7 +136,7 @@ module Parsbank
 
     transaction = Object.const_get(Parsbank.configuration.model).create(
       description: description,
-      gatway: bank
+      gateway: bank
       )
 
     puts transaction.id
