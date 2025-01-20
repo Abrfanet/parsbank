@@ -53,19 +53,21 @@ module Parsbank
 
   def self.establish_connection
     database_url = Parsbank.configuration.database_url
+    model = Parsbank.configuration.model
     raise "DATABASE_URL environment variable is not set" if database_url.nil?
     begin
       ActiveRecord::Base.establish_connection(database_url)
-      unless ActiveRecord::Base.connection.table_exists?('transactions')
+      unless ActiveRecord::Base.connection.table_exists?(model.pluralize)
         puts 'Create Transaction Table'
-        # This line will raise an exception if the table doesn't exist
-        ActiveRecord::Base.connection.create_table :transactions do |t|
+        ActiveRecord::Base.connection.create_table model.pluralize.downcase do |t|
           t.string :gateway
           t.string :amount
           t.string :unit
           t.string :track_id
           t.string :local_id
+          t.string :ip
           t.integer :user_id
+          t.integer :cart_id
           t.text :description
           t.string :status
           t.timestamps
@@ -87,32 +89,32 @@ module Parsbank
     description = args.fetch(:description)
     default_callback = "#{selected_bank[bank.to_s]['callback_url'] || Parsbank.configuration.callback_url}&bank_name=#{bank}"
 
-    crypto_amount = args.fetch(:crypto_amount) if args.key?(:crypto_amount)
-    fiat_amount = args.fetch(:fiat_amount) if args.key?(:fiat_amount)
-    real_amount = args.fetch(:real_amount) if args.key?(:real_amount)
+    crypto_amount = args.fetch(:crypto_amount, nil)
+    fiat_amount = args.fetch(:fiat_amount, nil) 
+    real_amount = args.fetch(:real_amount, nil) 
 
     if crypto_amount.nil? && fiat_amount.nil? && real_amount.nil?
       raise 'Amount fileds is emptey: crypto_amount OR fiat_amount OR real_amount'
     end
 
-    if $SUPPORTED_PSP[bank.to_s]['tags'].include? 'crypto' && [crypto_amount, real_amount].compact.empty?
+    if $SUPPORTED_PSP[bank.to_s]['tags'].include?('crypto') && crypto_amount.nil? && real_amount.nil?
       raise "#{bank} needs crypto_amount or real_amount"
     end
 
-    if $SUPPORTED_PSP[bank.to_s]['tags'].include? 'rial' && [fiat_amount, real_amount].compact.empty?
+    if $SUPPORTED_PSP[bank]['tags'].include?('rial') && fiat_amount.nil? && real_amount.nil?
       raise "#{bank} needs fiat_amount or real_amount"
     end
 
     transaction = Object.const_get(Parsbank.configuration.model).create(
       description: description,
-      getway: bank
+      gatway: bank
       )
 
     puts transaction.id
     case bank
     when 'mellat'
       mellat_klass = Parsbank::Mellat.new(
-        amount: args.fetch(:amount),
+        amount: fiat_amount,
         additional_data: description,
         callback_url: default_callback,
         orderId: transaction.id
@@ -122,7 +124,7 @@ module Parsbank
 
     when 'zarinpal'
       zarinpal_klass = Parsbank::Zarinpal.new(
-        amount: amount,
+        amount: fiat_amount,
         additional_data: description,
         callback_url: default_callback
       )
@@ -131,7 +133,7 @@ module Parsbank
 
     when 'zibal'
       Parsbank::Zibal.new(
-        amount: amount,
+        amount: fiat_amount,
         additional_data: description,
         callback_url: default_callback
       )

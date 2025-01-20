@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ['mm580486@gmail.com']
 
   spec.summary = 'An powerfull gem for lunch your smart gateways'
-  spec.description = 'Focus on your ecommerce we handle your payments.'
+  spec.description = 'Focus on your ecommerce we handle your gateways.'
   spec.homepage = 'https://github.com/Abrfanet'
   spec.required_ruby_version = '>= 3.0.0'
 
@@ -28,11 +28,7 @@ Gem::Specification.new do |spec|
   end
 
   spec.add_dependency 'activerecord'
-  spec.add_dependency 'faraday'
-  spec.add_dependency 'faraday_middleware'
   spec.add_dependency 'savon'
-  # spec.add_dependency 'activerecord'
-
 
   spec.bindir = 'exe'
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
