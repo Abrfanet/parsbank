@@ -62,12 +62,12 @@
     "zarinpal": {
       "name": "Zarinpal",
       "website": "http://www.sepehrpay.com",
-      "tags": ["iranian-psp", "ir", "rial"]
+      "tags": ["iranian-psp", "irt", "rial"]
     },
     "zibal": {
       "name": "Zibal",
       "website": "http://zibal.ir",
-      "tags": ["iranian-psp", "ir", "rial"]
+      "tags": ["iranian-psp", "irt", "rial"]
     },
     "bscbitcoin": {
       "name": "Binance Bitcoin",

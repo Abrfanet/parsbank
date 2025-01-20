@@ -81,7 +81,7 @@ module Parsbank
       ActiveRecord::Base.establish_connection(database_url)
       unless ActiveRecord::Base.connection.table_exists?(model.tableize)
         puts 'Create Transaction Table'
-        ActiveRecord::Base.connection.create_table model.tableize.downcase do |t|
+        ActiveRecord::Base.connection.create_table model.tableize do |t|
           t.string :gateway
           t.string :amount
           t.string :unit
@@ -91,6 +91,9 @@ module Parsbank
           t.integer :user_id
           t.integer :cart_id
           t.text :description
+          t.string :callback_url
+          t.text :gateway_verify_response
+          t.text :gateway_response
           t.string :status
           t.timestamps
         end
@@ -136,10 +139,12 @@ module Parsbank
 
     transaction = Object.const_get(Parsbank.configuration.model).create(
       description: description,
-      gateway: bank
-      )
+      amount: fiat_amount || crypto_amount,
+      gateway: bank,
+      callback_url: default_callback,
+      status: 'start'
+      ) if Parsbank.configuration.database_url.present?
 
-    puts transaction.id
     case bank
     when 'mellat'
       mellat_klass = Parsbank::Mellat.new(
@@ -149,6 +154,7 @@ module Parsbank
         orderId: transaction.id
       )
       mellat_klass.call
+      transaction.update!(gateway_response: mellat_klass.response)
       result = mellat_klass.redirect_form
 
     when 'zarinpal'
@@ -158,6 +164,7 @@ module Parsbank
         callback_url: default_callback
       )
       zarinpal_klass.call
+      transaction.update!(gateway_response: zarinpal_klass.response,track_id: zarinpal_klass.ref_id, unit: 'irt',ip: args.fetch(:ip, nil)) if transaction.present?
       result = zarinpal_klass.redirect_form
 
     when 'zibal'
