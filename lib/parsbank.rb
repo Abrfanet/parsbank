@@ -5,6 +5,7 @@ require 'savon'
 require 'uri'
 require 'active_support'
 require 'parsbank/version'
+require 'db_setup'
 require 'parsbank/restfull'
 require 'parsbank/bsc-bitcoin/bsc-bitcoin'
 require 'parsbank/mellat/mellat'
@@ -45,71 +46,9 @@ module Parsbank
   end
 
   def self.initialize!
-    if Parsbank.configuration.database_url.present?
-      establish_connection
-    else
-      puts "\033[31mParsBank ERROR: database_url not set, Transaction history not stored on database\033[0m"
-    end
+      ParsBank::DBSetup.establish_connection
   end
 
-  def self.establish_connection
-    database_url = Parsbank.configuration.database_url
-    model = Parsbank.configuration.model
-    raise "DATABASE_URL environment variable is not set" if database_url.nil?
-
-    supported_databases = {
-      'postgresql' => 'pg',
-      'mysql2' => 'mysql2',
-      'sqlite3' => 'sqlite3',
-      'nulldb' => 'nulldb'
-      }.freeze
-
-    uri = URI.parse(database_url)
-
-    gem_name = supported_databases[uri.scheme]
-    unless gem_name
-      raise "Unsupported database adapter: #{uri.scheme}. Supported adapters: #{supported_databases.keys.join(', ')}"
-    end
-
-    begin
-      require gem_name
-    rescue LoadError
-      raise "Missing required gem for #{uri.scheme}. Please add `gem '#{gem_name}'` to your Gemfile."
-    end
-
-    begin
-      ActiveRecord::Base.establish_connection(database_url)
-      unless ActiveRecord::Base.connection.table_exists?(model.tableize)
-        puts 'Create Transaction Table'
-        ActiveRecord::Base.connection.create_table model.tableize do |t|
-          t.string :gateway
-          t.string :amount
-          t.string :unit
-          t.string :track_id
-          t.string :local_id
-          t.string :ip
-          t.integer :user_id
-          t.integer :cart_id
-          t.text :description
-          t.string :callback_url
-          t.text :gateway_verify_response
-          t.text :gateway_response
-          t.string :status
-          t.timestamps
-        end
-      end
-
-      unless Object.const_defined?(model)
-        Object.const_set(model, Class.new(ActiveRecord::Base) do
-          self.table_name = model.tableize
-        end)
-      end
-
-    rescue => e
-      raise "Failed to connect to the database: #{e.message}"
-    end
-
-  end
 
   def self.redirect_to_gateway(args = {})
     bank = args.fetch(:bank, available_gateways_list.keys.sample)
@@ -122,14 +61,14 @@ module Parsbank
     default_callback = "#{selected_bank[bank.to_s]['callback_url'] || Parsbank.configuration.callback_url}&bank_name=#{bank}"
 
     crypto_amount = args.fetch(:crypto_amount, nil)
-    fiat_amount = args.fetch(:fiat_amount, nil) 
-    real_amount = args.fetch(:real_amount, nil) 
+    fiat_amount = args.fetch(:fiat_amount, nil)
+    real_amount = args.fetch(:real_amount, nil)
 
     if crypto_amount.nil? && fiat_amount.nil? && real_amount.nil?
       raise 'Amount fileds is emptey: crypto_amount OR fiat_amount OR real_amount'
     end
 
-    if $SUPPORTED_PSP[bank.to_s]['tags'].include?('crypto') && crypto_amount.nil? && real_amount.nil?
+    if $SUPPORTED_PSP[bank]['tags'].include?('crypto') && crypto_amount.nil? && real_amount.nil?
       raise "#{bank} needs crypto_amount or real_amount"
     end
 
@@ -142,7 +81,11 @@ module Parsbank
       amount: fiat_amount || crypto_amount,
       gateway: bank,
       callback_url: default_callback,
-      status: 'start'
+      status: 'start',
+      user_id: args.fetch(:user_id, nil),
+      cart_id: args.fetch(:cart_id, nil),
+      local_id: args.fetch(:local_id, nil),
+      ip: args.fetch(:ip, nil)
       ) if Parsbank.configuration.database_url.present?
 
     case bank
@@ -154,7 +97,7 @@ module Parsbank
         orderId: transaction.id
       )
       mellat_klass.call
-      transaction.update!(gateway_response: mellat_klass.response)
+      transaction.update!(gateway_response: mellat_klass.response, unit: 'irr')
       result = mellat_klass.redirect_form
 
     when 'zarinpal'
@@ -164,7 +107,7 @@ module Parsbank
         callback_url: default_callback
       )
       zarinpal_klass.call
-      transaction.update!(gateway_response: zarinpal_klass.response,track_id: zarinpal_klass.ref_id, unit: 'irt',ip: args.fetch(:ip, nil)) if transaction.present?
+      transaction.update!(gateway_response: zarinpal_klass.response,track_id: zarinpal_klass.ref_id, unit: 'irt') if transaction.present?
       result = zarinpal_klass.redirect_form
 
     when 'zibal'
@@ -180,8 +123,9 @@ module Parsbank
         additional_data: description
       )
       convert_real_amount_to_assets if crypto_amount.nil? && args.key?(:real_amount)
-
       result = bscbitcoin_klass.generate_payment_address(amount: amount)
+      transaction.update!(gateway_response: result, unit: 'bitcoin') if transaction.present?
+
     end
 
     result
@@ -212,7 +156,7 @@ module Parsbank
 
   def self.gateways_list_shortcode
     banks_list = available_gateways_list.keys.map { |bank| render_bank_list_item(bank) }.join
-    "<ul class='parsbank_selector'>#{banks_list}</ul>"
+    "<ul class='parsbank_selector'>#{banks_list}</ul>".gsub(/(?:\n\r?|\r\n?)/, '')
   end
 
   def self.render_bank_list_item(bank)
@@ -224,13 +168,11 @@ module Parsbank
     end
     <<~HTML
       <li class='parsbank_radio_wrapper #{bank}_wrapper'>
-      #{'  '}
-        <input type='radio' id='#{bank}' name='bank' value='#{bank}' />
-        <label for='#{bank}'>#{begin
+        <input type='radio' id='#{bank}' name='bank' value='#{bank}' /><label for='#{bank}'>#{begin
           File.read(body)
         rescue StandardError
           ''
-        end} #{bank.upcase}</label>
+        end}#{bank.camelcase}</label>
       </li>
     HTML
   end
