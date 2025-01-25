@@ -3,11 +3,47 @@
 module ParsBank
   class DBSetup
     def self.establish_connection
-
-      unless Parsbank.configuration.database_url.present?
-        return puts("\033[31mParsBank ERROR: database_url not set, Transaction history not stored on database\033[0m")
+      if Parsbank.configuration.database_url.present?
+        setup_db
+      else
+        simulate_db
+        puts("\033[31mParsBank ERROR: database_url not set, Transaction history not stored on database\033[0m")
       end
-      
+    end
+
+    def self.simulate_db
+      model_name = Parsbank.configuration.model || 'Transaction'
+      simulated_model = Class.new do
+        attr_accessor :description, :amount, :gateway, :callback_url, :status,
+                      :user_id, :cart_id, :local_id, :ip, :gateway_verify_response, :gateway_response
+
+        def initialize(attributes = {})
+          build_attrs attributes
+        end
+
+        def update!(attributes = {})
+          build_attrs attributes
+        end
+
+        def build_attrs attributes = {}
+          attributes.each do |key, value|
+            send("#{key}=", value)
+          end
+        end
+        def save
+          # Simulate saving (e.g., print or log the data)
+          @id = Time.now.to_i # Simulate an ID assignment
+          true
+        end
+
+        attr_reader :id
+      end
+
+      # Set the simulated class as a constant
+      Object.const_set(model_name.camelcase, simulated_model)
+    end
+
+    def self.setup_db
       database_url = Parsbank.configuration.database_url
       model = Parsbank.configuration.model
       raise 'DATABASE_URL environment variable is not set' if database_url.nil?

@@ -50,7 +50,9 @@ module Parsbank
   end
 
 
-  def self.redirect_to_gateway(args = {})
+  
+
+  def self.transaction_request(args = {})
     bank = args.fetch(:bank, available_gateways_list.keys.sample)
     selected_bank = available_gateways_list.select { |k| k == bank }
     unless selected_bank.present?
@@ -76,7 +78,7 @@ module Parsbank
       raise "#{bank} needs fiat_amount or real_amount"
     end
 
-    transaction = Object.const_get(Parsbank.configuration.model).create(
+    transaction = Object.const_get((Parsbank.configuration.model || 'Transaction')).new(
       description: description,
       amount: fiat_amount || crypto_amount,
       gateway: bank,
@@ -86,8 +88,9 @@ module Parsbank
       cart_id: args.fetch(:cart_id, nil),
       local_id: args.fetch(:local_id, nil),
       ip: args.fetch(:ip, nil)
-      ) if Parsbank.configuration.database_url.present?
+      ) 
 
+    transaction.save
     case bank
     when 'mellat'
       mellat_klass = Parsbank::Mellat.new(
@@ -107,7 +110,7 @@ module Parsbank
         callback_url: default_callback
       )
       zarinpal_klass.call
-      transaction.update!(gateway_response: zarinpal_klass.response,track_id: zarinpal_klass.ref_id, unit: 'irt') if transaction.present?
+      transaction.update!(gateway_response: zarinpal_klass.response,track_id: zarinpal_klass.ref_id, unit: 'irt') 
       result = zarinpal_klass.redirect_form
 
     when 'zibal'
@@ -128,7 +131,7 @@ module Parsbank
 
     end
 
-    result
+    return {transaction: transaction, html_form: result}
   end
 
   def self.load_secrets_yaml
