@@ -54,7 +54,7 @@ ParsBank.configuration do |config|
   config.mitm_server = 'https://your-mitm-server.com'  # MITM server location
   config.secrets_path = Rails.root.join('config/bank_secrets.yaml') # Path to bank credentials (e.g., merchant ID, tokens)
 
-  # Web Panel Configuration
+  # Web Panel Configuration For Pro Users
   config.webpanel_path = '/parsbank'                   # Web panel path
   config.username = ENV['PARSBANK_USERNAME']           # Web panel username
   config.password = ENV['PARSBANK_PASSWORD']           # Web panel password
@@ -84,8 +84,8 @@ class CartController < ApplicationController
   # @INPUT tags: Used for call which payments method such as ['crypto','rls','dollar','persian-banks','russian-banks']
   # @OUTPUT get_redirect_from: an javascript code for redirect user to gateways
   def redirect_to_parsbank
-    form = ParsBank.get_redirect_from(fiat_amount: '10', description: 'Charge Account')
-    render html: form
+    form = ParsBank.transaction_request(fiat_amount: '10', description: 'Charge Account')
+    render html: from.html_form
   end
 
   # @DESC: Shortcode for get all of enabled paymetns methods
@@ -93,6 +93,8 @@ class CartController < ApplicationController
   # @OUTPUT gateways_list_shortcode: List of all banks with name and logo with ul wrapper as html
   def choose_payment
     @payments_list_available_shortcode = ParsBank.gateways_list_shortcode
+    # ..OR..
+    @available_gateways_list = ParsBank.Parsbank.available_gateways_list
   end
 
   # @DESC: Parse all returned params from banks for verify transaction

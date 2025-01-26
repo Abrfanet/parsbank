@@ -12,13 +12,13 @@ require 'parsbank/mellat/mellat'
 require 'parsbank/zarinpal/zarinpal'
 require 'parsbank/zibal/zibal'
 require 'configuration'
+require 'parsbank/transaction_request'
 
-# Main Module
 module Parsbank
   class Error < StandardError; end
 
   $SUPPORTED_PSP = JSON.parse(File.read(File.join(__dir__, 'psp.json')))
-  
+
   class << self
     attr_accessor :configuration
   end
@@ -36,7 +36,6 @@ module Parsbank
     load_secrets_yaml.select { |_, value| value['enabled'] }
   end
 
-
   def self.initialize_in_rails
     return unless defined?(Rails)
 
@@ -46,92 +45,7 @@ module Parsbank
   end
 
   def self.initialize!
-      ParsBank::DBSetup.establish_connection
-  end
-
-
-  
-
-  def self.transaction_request(args = {})
-    bank = args.fetch(:bank, available_gateways_list.keys.sample)
-    selected_bank = available_gateways_list.select { |k| k == bank }
-    unless selected_bank.present?
-      raise "Bank not enabled or not exists in #{Parsbank.configuration.secrets_path}: #{bank}"
-    end
-
-    description = args.fetch(:description)
-    default_callback = "#{selected_bank[bank.to_s]['callback_url'] || Parsbank.configuration.callback_url}&bank_name=#{bank}"
-
-    crypto_amount = args.fetch(:crypto_amount, nil)
-    fiat_amount = args.fetch(:fiat_amount, nil)
-    real_amount = args.fetch(:real_amount, nil)
-
-    if crypto_amount.nil? && fiat_amount.nil? && real_amount.nil?
-      raise 'Amount fileds is emptey: crypto_amount OR fiat_amount OR real_amount'
-    end
-
-    if $SUPPORTED_PSP[bank]['tags'].include?('crypto') && crypto_amount.nil? && real_amount.nil?
-      raise "#{bank} needs crypto_amount or real_amount"
-    end
-
-    if $SUPPORTED_PSP[bank]['tags'].include?('rial') && fiat_amount.nil? && real_amount.nil?
-      raise "#{bank} needs fiat_amount or real_amount"
-    end
-
-    transaction = Object.const_get((Parsbank.configuration.model || 'Transaction')).new(
-      description: description,
-      amount: fiat_amount || crypto_amount,
-      gateway: bank,
-      callback_url: default_callback,
-      status: 'start',
-      user_id: args.fetch(:user_id, nil),
-      cart_id: args.fetch(:cart_id, nil),
-      local_id: args.fetch(:local_id, nil),
-      ip: args.fetch(:ip, nil)
-      ) 
-
-    transaction.save
-    case bank
-    when 'mellat'
-      mellat_klass = Parsbank::Mellat.new(
-        amount: fiat_amount,
-        additional_data: description,
-        callback_url: default_callback,
-        orderId: transaction.id
-      )
-      mellat_klass.call
-      transaction.update!(gateway_response: mellat_klass.response, unit: 'irr')
-      result = mellat_klass.redirect_form
-
-    when 'zarinpal'
-      zarinpal_klass = Parsbank::Zarinpal.new(
-        amount: fiat_amount,
-        additional_data: description,
-        callback_url: default_callback
-      )
-      zarinpal_klass.call
-      transaction.update!(gateway_response: zarinpal_klass.response,track_id: zarinpal_klass.ref_id, unit: 'irt') 
-      result = zarinpal_klass.redirect_form
-
-    when 'zibal'
-      Parsbank::Zibal.new(
-        amount: fiat_amount,
-        additional_data: description,
-        callback_url: default_callback
-      )
-      zarinpal_klass.call
-      result = zarinpal_klass.redirect_form
-    when 'bscbitcoin'
-      bscbitcoin_klass = Parsbank::BscBitcoin.new(
-        additional_data: description
-      )
-      convert_real_amount_to_assets if crypto_amount.nil? && args.key?(:real_amount)
-      result = bscbitcoin_klass.generate_payment_address(amount: amount)
-      transaction.update!(gateway_response: result, unit: 'bitcoin') if transaction.present?
-
-    end
-
-    return {transaction: transaction, html_form: result}
+    Parsbank::DBSetup.establish_connection
   end
 
   def self.load_secrets_yaml
@@ -180,7 +94,5 @@ module Parsbank
     HTML
   end
 end
-
-
 
 Parsbank.initialize_in_rails

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module ParsBank
+module Parsbank
   class DBSetup
     def self.establish_connection
       if Parsbank.configuration.database_url.present?
@@ -15,14 +15,14 @@ module ParsBank
       model_name = Parsbank.configuration.model || 'Transaction'
       simulated_model = Class.new do
         attr_accessor :description, :amount, :gateway, :callback_url, :status,
-                      :user_id, :cart_id, :local_id, :ip, :gateway_verify_response, :gateway_response
+                      :user_id, :cart_id, :local_id, :ip, :gateway_verify_response, :gateway_response, :track_id, :unit, :created_at, :updated_at
 
         def initialize(attributes = {})
-          build_attrs attributes
+          build_attrs attributes.merge({created_at: Time.now})
         end
 
         def update!(attributes = {})
-          build_attrs attributes
+          build_attrs attributes.merge({updated_at: Time.now})
         end
 
         def build_attrs attributes = {}
