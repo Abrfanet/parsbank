@@ -19,6 +19,12 @@ module Parsbank
       raise ArgumentError, "Missing required argument: #{e.message}"
     end
 
+    def self.logo
+      file_path = "#{__dir__}/logo.svg"
+      return [404, { 'Content-Type' => 'text/plain' }, ['File not found']] unless File.exist?(file_path)
+      File.read file_path
+    end
+    
     def validate(response = nil)
       @response = response
       perform_validation
