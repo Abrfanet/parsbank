@@ -3,6 +3,8 @@
 require 'yaml'
 require 'savon'
 require 'uri'
+require 'erb'
+require 'i18n'
 require 'active_support'
 require 'parsbank/version'
 require 'db_setup'
@@ -11,13 +13,13 @@ require 'parsbank/bsc-bitcoin/bsc-bitcoin'
 require 'parsbank/mellat/mellat'
 require 'parsbank/zarinpal/zarinpal'
 require 'parsbank/zibal/zibal'
+require 'parsbank/nobitex/nobitex'
 require 'configuration'
 require 'parsbank/transaction_request'
 
 module Parsbank
   class Error < StandardError; end
-
-  $SUPPORTED_PSP = JSON.parse(File.read(File.join(__dir__, 'psp.json')))
+  
 
   class << self
     attr_accessor :configuration
@@ -26,6 +28,11 @@ module Parsbank
   def self.configure
     self.configuration ||= Configuration.new
     yield configuration
+  end
+
+  
+  def self.supported_psp
+    JSON.parse(File.read(File.join(__dir__, 'psp.json')))
   end
 
   def self.gateways_list
@@ -45,7 +52,14 @@ module Parsbank
   end
 
   def self.initialize!
+
+    I18n.load_path += Dir.glob(File.join(__dir__, 'locales', '*.yml'))
+    I18n.available_locales = %i[en fa]
+    I18n.enforce_available_locales = false
+
+
     Parsbank::DBSetup.establish_connection
+   
   end
 
   def self.load_secrets_yaml
@@ -56,7 +70,7 @@ module Parsbank
       raise "Error: Invalid format in #{Parsbank.configuration.secrets_path}. Expected a hash of bank secrets."
     end
 
-    supported_banks = $SUPPORTED_PSP.keys
+    supported_banks = supported_psp.keys
 
     secrets.each_key do |bank_key|
       unless supported_banks.include?(bank_key.to_s)
@@ -71,28 +85,10 @@ module Parsbank
     raise "Error: YAML syntax issue in #{Parsbank.configuration.secrets_path}: #{e.message}"
   end
 
-  def self.gateways_list_shortcode
-    banks_list = available_gateways_list.keys.map { |bank| render_bank_list_item(bank) }.join
-    "<ul class='parsbank_selector'>#{banks_list}</ul>".gsub(/(?:\n\r?|\r\n?)/, '')
+  def self.gateways_list_shortcode args = {}
+    ERB.new(File.read(File.join(__dir__, 'tmpl', 'bank_list.html.erb'))).result(binding).gsub(/(?:\n\r?|\r\n?)/, '').gsub(/>\s+</, '><').gsub(/\s+/, ' ').strip
   end
 
-  def self.render_bank_list_item(bank)
-    bank_klass = Object.const_get("Parsbank::#{bank.capitalize}")
-    _, _, body = begin
-      bank_klass.logo
-    rescue StandardError
-      nil
-    end
-    <<~HTML
-      <li class='parsbank_radio_wrapper #{bank}_wrapper'>
-        <input type='radio' id='#{bank}' name='bank' value='#{bank}' /><label for='#{bank}'>#{begin
-          File.read(body)
-        rescue StandardError
-          ''
-        end}#{bank.camelcase}</label>
-      </li>
-    HTML
-  end
 end
 
 Parsbank.initialize_in_rails
