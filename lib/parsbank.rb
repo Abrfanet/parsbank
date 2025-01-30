@@ -16,6 +16,7 @@ require 'parsbank/zibal/zibal'
 require 'parsbank/nobitex/nobitex'
 require 'configuration'
 require 'parsbank/transaction_request'
+require 'parsbank/transaction_verify'
 
 module Parsbank
   class Error < StandardError; end

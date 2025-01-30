@@ -159,13 +159,9 @@
    const PSP = <%= Parsbank.supported_psp.to_json %>;
    
    function loadConditions(event) {
-        console.log('Checked radio with ID = ' + event.target.value);
-        console.log(PSP[event.target.value]);
-        
-        
         document.getElementById('parsbank-blockquote').textContent = I18n.<%= I18n.locale.to_s %>.bank_list[event.target.value];
-
     }
+    
     document.querySelectorAll("input[name='parsbank-selectors']").forEach((input) => {
         input.addEventListener('change', loadConditions);
     });
