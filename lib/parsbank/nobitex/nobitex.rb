@@ -28,13 +28,9 @@ module Parsbank
     def self.logo
       file_path = "#{__dir__}/logo.svg"
       return [404, { 'Content-Type' => 'text/plain' }, ['File not found']] unless File.exist?(file_path)
-
-      [
-        200,
-        { 'Content-Type' => 'image/svg+xml' },
-        File.open(file_path, 'r')
-      ]
+      File.read file_path
     end
+
 
     def validate(response = nil)
       @response = response
