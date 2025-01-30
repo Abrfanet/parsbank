@@ -138,15 +138,13 @@
               <%= logo = Object.const_get("Parsbank::#{key.capitalize}").logo if defined?(Object.const_get("Parsbank::#{key.capitalize}").logo) %>
               <%= logo if logo.present? %> <!-- Avoid nil errors -->
             </div>
-            <span><%= key.camelcase %></span>
+            <span><%= I18n.t key.camelcase %></span>
           </label>
         </div>
       <% end %>
     </div>
 
-<blockquote id='parsbank-blockquote' cite="">
-
-</blockquote>
+<blockquote id='parsbank-blockquote' cite="https://github.com/Abrfanet/parsbank"></blockquote>
 
   </fieldset>
 </section>
@@ -161,7 +159,7 @@
    function loadConditions(event) {
         document.getElementById('parsbank-blockquote').textContent = I18n.<%= I18n.locale.to_s %>.bank_list[event.target.value];
     }
-    
+
     document.querySelectorAll("input[name='parsbank-selectors']").forEach((input) => {
         input.addEventListener('change', loadConditions);
     });

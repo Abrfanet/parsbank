@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    parsbank (0.0.5)
+    parsbank (0.0.6)
       activerecord
       savon
 
