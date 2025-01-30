@@ -1,0 +1,173 @@
+<style>
+  #parsbank-wrapper, #parsbank-wrapper *:not(svg *) {
+    all: revert;
+  }
+
+  /* Direction handling based on language and body direction */
+  html[lang="fa-IR"] #parsbank-wrapper,
+  body[dir="rtl"] #parsbank-wrapper {
+    direction: rtl;
+  }
+
+  html[lang="en"] #parsbank-wrapper,
+  body[dir="ltr"] #parsbank-wrapper {
+    direction: ltr;
+  }
+
+  /* Flex container settings */
+  #parsbank-wrapper .flex-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Label styling */
+  #parsbank-wrapper .flex-container label {
+    margin: 15px;
+  }
+
+  #parsbank-wrapper .flex-container label span {
+    display: block;
+    text-align: center;
+    margin: auto;
+  }
+
+  /* Styled radio button container */
+  #parsbank-wrapper .styled-radio {
+    position: relative;
+    object-fit: contain;
+    width: 100px;
+    height: 100px;
+    padding: 15px;
+    display: inline-block;
+    border-radius: 50%;
+    text-align: center;
+  }
+
+  #parsbank-wrapper .styled-radio svg {
+    position: absolute;
+    height: 100%;
+    width: 75%;
+    top: 0;
+    margin: auto;
+    display: block;
+  }
+
+  /* Color class styling */
+  #parsbank-wrapper .red { background: tomato; }
+  #parsbank-wrapper .green { background: limegreen; }
+  #parsbank-wrapper .blue { background: cornflowerblue; }
+
+  /* Invisible radio button styling */
+  #parsbank-wrapper .invisible-radio {
+    position: absolute;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px 1px 1px 1px); /* Ensure it works across browsers */
+  }
+
+  /* After styling when invisible radio is checked */
+  #parsbank-wrapper .invisible-radio + label .styled-radio::after {
+    content: attr(data-text);
+    font-size: 1.5em;
+    display: inline-block;
+    padding: 20px;
+    width: 150px;
+    text-align: center;
+    position: absolute;
+    bottom: -60px;
+  }
+
+  /* Styling when radio is checked */
+  #parsbank-wrapper .invisible-radio:checked + label .styled-radio {
+    background-color: #FFD700;
+  }
+
+  /* Checkmark display when selected */
+  #parsbank-wrapper .invisible-radio:checked + label span:before {
+    content: '\2713';
+    display: inline-block;
+    color: green;
+    padding-left: 5px;
+    scale: 1.7;
+  }
+
+  /* Hover effect on non-checked radios */
+  #parsbank-wrapper .invisible-radio:not(:checked) + label {
+    cursor: pointer;
+  }
+
+  #parsbank-wrapper .invisible-radio:not(:checked) + label:hover .styled-radio {
+    opacity: 0.7;
+  }
+
+  /* Focus effect on invisible radio */
+  #parsbank-wrapper .invisible-radio:focus + label .styled-radio {
+    transform: scale(1, 1);
+    animation: pulsate 1s alternate ease-in-out infinite;
+  }
+
+  /* Animation for pulsating effect */
+  @keyframes pulsate {
+    from {
+      transform: scale(1);
+      box-shadow: none;
+    }
+    to {
+      transform: scale(1.05);
+      box-shadow: 1px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  #parsbank-blockquote{
+    display:block;
+    width:100%;
+  }
+</style>
+
+<section id="parsbank-wrapper">
+  <fieldset class="flex-container">
+    <legend><%= args.fetch(:legend_message, 'Choose Your Payment Method...') %></legend>
+    <div class="flex-container">
+      <% Parsbank.available_gateways_list.each_key do |key| %>
+        <div id="<%= key.downcase %>-wrapper">
+          <input type="radio" name="parsbank-selectors" id="parsbank-radio-<%= key %>" value='<%= key %>' class="invisible-radio">
+          <label for="parsbank-radio-<%= key %>">
+            <div class="styled-radio blue">
+              <%= logo = Object.const_get("Parsbank::#{key.capitalize}").logo if defined?(Object.const_get("Parsbank::#{key.capitalize}").logo) %>
+              <%= logo if logo.present? %> <!-- Avoid nil errors -->
+            </div>
+            <span><%= key.camelcase %></span>
+          </label>
+        </div>
+      <% end %>
+    </div>
+
+<blockquote id='parsbank-blockquote' cite="">
+
+</blockquote>
+
+  </fieldset>
+</section>
+
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function() {
+  window.I18n = window.I18n || {};
+  window.I18n['<%= I18n.locale.to_s %>'] = <%= I18n.t('.').to_json.html_safe %>;
+
+   const PSP = <%= Parsbank.supported_psp.to_json %>;
+   
+   function loadConditions(event) {
+        console.log('Checked radio with ID = ' + event.target.value);
+        console.log(PSP[event.target.value]);
+        
+        
+        document.getElementById('parsbank-blockquote').textContent = I18n.<%= I18n.locale.to_s %>.bank_list[event.target.value];
+
+    }
+    document.querySelectorAll("input[name='parsbank-selectors']").forEach((input) => {
+        input.addEventListener('change', loadConditions);
+    });
+  });
+</script>
