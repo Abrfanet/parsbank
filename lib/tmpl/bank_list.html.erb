@@ -1,3 +1,8 @@
+
+<%
+# Global Vars
+@supported_psp=Parsbank.supported_psp
+%>
 <style>
   #parsbank-wrapper, #parsbank-wrapper *:not(svg *) {
     all: revert;
@@ -24,6 +29,7 @@
   /* Label styling */
   #parsbank-wrapper .flex-container label {
     margin: 15px;
+    display: block;
   }
 
   #parsbank-wrapper .flex-container label span {
@@ -120,9 +126,39 @@
     }
   }
 
-  #parsbank-blockquote{
-    display:block;
+  #parsbank-wrapper #parsbank-blockquote{
+    display:block !important;
     width:100%;
+  }
+
+
+  #parsbank-wrapper select{
+    display: none;
+  width: 100%;
+  padding: .375rem 2.25rem .375rem .75rem;
+  -moz-padding-start: calc(0.75rem - 3px);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position:  <%= ( I18n.locale.to_s == 'fa') ? 'right' : 'left' %> .75rem center;
+  background-size: 16px 12px;
+  border: 1px solid #ced4da;
+  border-radius: .25rem;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+    transition:1s;
+
+  }
+  #parsbank-radio-nobitex:checked ~ .coin-network,#parsbank-radio-bsc-bitcoin{
+    display:block !important;
+    opacity: 1;
+    transition:1s;
   }
 </style>
 
@@ -138,8 +174,16 @@
               <%= logo = Object.const_get("Parsbank::#{key.capitalize}").logo if defined?(Object.const_get("Parsbank::#{key.capitalize}").logo) %>
               <%= logo if logo.present? %> <!-- Avoid nil errors -->
             </div>
-            <span><%= I18n.t key.camelcase %></span>
+            <span><%= I18n.t "bank_names.#{key}" %></span>
           </label>
+
+          <% if ['nobitex','bsc-bitcoin'].include? key.downcase  %>
+            <select name='coin-network' class='coin-network'>
+                <% Parsbank.supported_psp[key]['support_coins'].each do |coin| %>
+                    <option value="<%= coin %>"><%= coin.upcase %></option>
+                <% end %>
+            </select>
+          <% end %>
         </div>
       <% end %>
     </div>
@@ -154,7 +198,7 @@
   window.I18n = window.I18n || {};
   window.I18n['<%= I18n.locale.to_s %>'] = <%= I18n.t('.').to_json.html_safe %>;
 
-   const PSP = <%= Parsbank.supported_psp.to_json %>;
+   const PSP = <%= @supported_psp.to_json %>;
    
    function loadConditions(event) {
         document.getElementById('parsbank-blockquote').textContent = I18n.<%= I18n.locale.to_s %>.bank_list[event.target.value];
@@ -163,5 +207,10 @@
     document.querySelectorAll("input[name='parsbank-selectors']").forEach((input) => {
         input.addEventListener('change', loadConditions);
     });
+
+    
+
+
+
   });
 </script>

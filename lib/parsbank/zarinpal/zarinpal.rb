@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Parsbank
   class Zarinpal
     attr_accessor :amount, :description, :email, :mobile, :merchant_id
@@ -19,6 +21,7 @@ module Parsbank
     def self.logo
       file_path = "#{__dir__}/logo.svg"
       return [404, { 'Content-Type' => 'text/plain' }, ['File not found']] unless File.exist?(file_path)
+
       File.read file_path
     end
 
@@ -46,28 +49,29 @@ module Parsbank
       raise "SOAP request failed: #{e.message}"
     end
 
-    def redirect_form
-      "
+    def redirect_form(ref_id)
+      javascript_tag = <<-JS
         <script type='text/javascript' charset='utf-8'>
-  function postRefId (refIdValue) {
-        var form = document.createElement('form');
-        form.setAttribute('method', 'POST');
-        form.setAttribute('action', 'https://www.zarinpal.com/pg/StartPay/#{ref_id}');
-        form.setAttribute('target', '_self');
-        var hiddenField = document.createElement('input');
-        hiddenField.setAttribute('name', 'RefId');
-        hiddenField.setAttribute('value', refIdValue);
-        form.appendChild(hiddenField);
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-      }
-
-
-        postRefId('#{ref_id}') %>')
-      </script>
-          "
+          function postRefId(refIdValue) {
+            var form = document.createElement('form');
+            form.setAttribute('method', 'POST');
+            form.setAttribute('action', 'https://www.zarinpal.com/pg/StartPay/' + refIdValue);
+            form.setAttribute('target', '_self');
+            var hiddenField = document.createElement('input');
+            hiddenField.setAttribute('name', 'RefId');
+            hiddenField.setAttribute('value', refIdValue);
+            form.appendChild(hiddenField);
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+          }
+          postRefId('#{ref_id}');
+        </script>
+      JS
+    
+      "#{javascript_tag}#{t('actions.redirect_to_gate')}".html_safe
     end
+    
 
     private
 

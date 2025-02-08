@@ -1,4 +1,9 @@
 fa:
+  actions:
+    redirect_to_gate: "در حال انتقال به درگاه پرداخت هستید"
+    success: "عملیات با موفقیت انجام شد"
+    failed: "عملیات با خطا مواجه شد"
+    uncertain: "به طور موقت وضعیت عملیات نامشخص است"
   bank_names:
     nobitex: "نوبیتکس"
     mellat: "بانک ملت"

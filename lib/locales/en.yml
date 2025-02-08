@@ -1,3 +1,18 @@
 en:
+  actions:
+    redirect_to_gate: "You are being redirected to the payment gateway"
+    success: "The operation was successful"
+    failed: "The operation encountered an error"
+    uncertain: "The operation status is temporarily uncertain"
+  bank_names:
+    nobitex: "Nobitex"
+    mellat: "Mellat Bank"
+    zarinpal: "Zarinpal"
+    zibal: "Zibal"
+    binance: "Binance"
   bank_list:
-    nobitex: " شما درحال پرداخت کریپتویی از طریق درگاه پرداخت نوبیتکس می‌باشید, توجه داشته باشید که شما میتوانید از دو روش تتر(USDT) و بیت کوین(BTN) استفاده کنید"
+    nobitex: "You are making a cryptocurrency payment through the Nobitex gateway. Please note that you can use two methods: Tether (USDT-TRC20) and Bitcoin (BTC-Lightning)."
+    zarinpal: "You are making a payment through the Zarinpal gateway."
+    mellat: "You are making a payment through the Mellat Bank direct payment gateway."
+    zibal: "You are making a payment through the Zibal gateway."
+    bsc-bitcoin: "You are making a cryptocurrency payment through Binance."
