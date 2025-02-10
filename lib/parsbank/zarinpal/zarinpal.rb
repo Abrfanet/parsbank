@@ -2,7 +2,7 @@
 
 module Parsbank
   class Zarinpal
-    attr_accessor :amount, :description, :email, :mobile, :merchant_id
+    attr_accessor :amount, :description, :email, :mobile, :merchant_id, :wsdl
     attr_reader :response, :status, :status_message, :ref_id, :logo
 
     def initialize(args = {})
@@ -43,10 +43,12 @@ module Parsbank
     end
 
     def call
-      response = @wsdl.call(:payment_request, message: build_request_message)
-      validate(response.body)
-    rescue Savon::Error => e
-      raise "SOAP request failed: #{e.message}"
+      response = @wsdl.call('PaymentRequest', build_request_message, {})
+      if response[:success]
+        validate(response[:body])
+      else
+        { status: :nok, message: '' }
+      end
     end
 
     def redirect_form(ref_id)
@@ -68,10 +70,9 @@ module Parsbank
           postRefId('#{ref_id}');
         </script>
       JS
-    
+
       "#{javascript_tag}#{t('actions.redirect_to_gate')}".html_safe
     end
-    
 
     private
 
@@ -80,14 +81,7 @@ module Parsbank
     end
 
     def create_wsdl_client
-      Savon.client(
-        wsdl: default_config(:wsdl) || 'https://de.zarinpal.com/pg/services/WebGate/wsdl',
-        pretty_print_xml: (Parsbank.configuration.debug ? true : false),
-        namespace: 'http://interfaces.core.sw.bps.com/',
-        log: (Parsbank.configuration.debug ? true : false),
-        logger: Rails.logger,
-        log_level: (Parsbank.configuration.debug ? :debug : :fatal)
-      )
+      Parsbank::SOAP.new((default_config(:wsdl) || 'https://de.zarinpal.com/pg/services/WebGate/wsdl'), 'http://schemas.xmlsoap.org/soap/envelope')
     end
 
     def build_request_message

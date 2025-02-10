@@ -15,4 +15,4 @@ en:
     zarinpal: "You are making a payment through the Zarinpal gateway."
     mellat: "You are making a payment through the Mellat Bank direct payment gateway."
     zibal: "You are making a payment through the Zibal gateway."
-    bsc-bitcoin: "You are making a cryptocurrency payment through Binance."
+    binance: "You are making a cryptocurrency payment through Binance."

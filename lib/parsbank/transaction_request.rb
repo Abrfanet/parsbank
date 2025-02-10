@@ -42,7 +42,7 @@ module Parsbank
       raise 'Amount fields are empty: crypto_amount OR fiat_amount OR real_amount' if [crypto_amount, fiat_amount,
                                                                                        real_amount].all?(&:nil?)
 
-      tags = $SUPPORTED_PSP[bank]['tags']
+      tags = Parsbank.supported_psp[bank]['tags']
       if tags.include?('crypto') && crypto_amount.nil? && real_amount.nil?
         raise "#{bank} needs crypto_amount or real_amount"
       end

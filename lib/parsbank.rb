@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'yaml'
-require 'savon'
 require 'uri'
 require 'erb'
 require 'i18n'
@@ -9,7 +8,8 @@ require 'active_support'
 require 'parsbank/version'
 require 'db_setup'
 require 'parsbank/restfull'
-require 'parsbank/bsc-bitcoin/bsc-bitcoin'
+require 'parsbank/soap'
+require 'parsbank/binance/binance'
 require 'parsbank/mellat/mellat'
 require 'parsbank/zarinpal/zarinpal'
 require 'parsbank/zibal/zibal'
@@ -62,6 +62,7 @@ module Parsbank
     # Load the YAML file specified by the secrets_path
     secrets = YAML.load_file(Parsbank.configuration.secrets_path)
     raise "Error: Invalid format in #{Parsbank.configuration.secrets_path}." unless secrets.is_a?(Hash)
+
     secrets.each_key do |bank_key|
       unless supported_psp.keys.include?(bank_key.to_s)
         raise "#{bank_key.capitalize} in #{Parsbank.configuration.secrets_path} is not supported by ParsBank. \nSupported Banks: #{supported_psp.keys.join(', ')}"

@@ -155,7 +155,7 @@
     transition:1s;
 
   }
-  #parsbank-radio-nobitex:checked ~ .coin-network,#parsbank-radio-bsc-bitcoin{
+  #parsbank-radio-nobitex:checked ~ .coin-network,#parsbank-radio-binance:checked ~ .coin-network{
     display:block !important;
     opacity: 1;
     transition:1s;
@@ -167,18 +167,17 @@
     <legend><%= args.fetch(:legend_message, 'Choose Your Payment Method...') %></legend>
     <div class="flex-container">
       <% Parsbank.available_gateways_list.each_key do |key| %>
-        <div id="<%= key.downcase %>-wrapper">
+        <div id="<%= key %>-wrapper">
           <input type="radio" name="parsbank-selectors" id="parsbank-radio-<%= key %>" value='<%= key %>' class="invisible-radio">
           <label for="parsbank-radio-<%= key %>">
             <div class="styled-radio blue">
-              <%= logo = Object.const_get("Parsbank::#{key.capitalize}").logo if defined?(Object.const_get("Parsbank::#{key.capitalize}").logo) %>
-              <%= logo if logo.present? %> <!-- Avoid nil errors -->
+              <%= Object.const_get("Parsbank::#{key.capitalize}").logo if defined?(Object.const_get("Parsbank::#{key.capitalize}").logo) %>
             </div>
             <span><%= I18n.t "bank_names.#{key}" %></span>
           </label>
 
-          <% if ['nobitex','bsc-bitcoin'].include? key.downcase  %>
-            <select name='coin-network' class='coin-network'>
+          <% if ['nobitex','binance'].include? key  %>
+            <select name='coin-network' class='coin-network <%= key %>-coin-selector'>
                 <% Parsbank.supported_psp[key]['support_coins'].each do |coin| %>
                     <option value="<%= coin %>"><%= coin.upcase %></option>
                 <% end %>

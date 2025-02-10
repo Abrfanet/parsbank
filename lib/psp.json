@@ -69,9 +69,9 @@
     "website": "http://zibal.ir",
     "tags": ["iranian-psp", "irt", "rial"]
   },
-  "bscbitcoin": {
-    "name": "Binance Bitcoin",
-    "website": "https://bitcoin.org",
+  "binance": {
+    "name": "Binance",
+    "website": "https://binance.com",
     "support_coins": ["btc", "usdt"],
     "tags": ["btc", "bitcoin", "binance", "bsc", "crypto"]
   },

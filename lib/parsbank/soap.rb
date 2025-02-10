@@ -2,6 +2,7 @@ require 'net/http'
 require 'uri'
 require 'rexml/document'
 module Parsbank
+  # Soap Class
   class SOAP
     attr_reader :endpoint, :namespace
 
@@ -11,7 +12,7 @@ module Parsbank
     end
 
     def call(action, body, headers = {})
-      xml = build_envelope(action, body)
+      xml = build_envelope(action, body.map { |k, v| "<s:#{k}>#{v}</#{k}>" }.join(''))
 
       http = Net::HTTP.new(@endpoint.host, @endpoint.port)
       http.use_ssl = (@endpoint.scheme == 'https')
@@ -19,6 +20,9 @@ module Parsbank
       request = Net::HTTP::Post.new(@endpoint.request_uri)
       request.content_type = 'text/xml; charset=utf-8'
       request['SOAPAction'] = "#{@namespace}/#{action}"
+
+      headers.store('Parsbank-RubyGem', Parsbank::VERSION)
+
       headers.each { |key, value| request[key] = value }
       request.body = xml
 
@@ -39,11 +43,11 @@ module Parsbank
     def build_envelope(action, body)
       <<~XML
         <?xml version="1.0" encoding="UTF-8"?>
-        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="#{@namespace}">
+        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:s="#{@namespace}">
           <soap:Body>
-            <ns:#{action}>
+            <s:#{action}>
               #{body}
-            </ns:#{action}>
+            </s:#{action}>
           </soap:Body>
         </soap:Envelope>
       XML
@@ -59,11 +63,10 @@ module Parsbank
     end
 
     def parse_xml(xml)
-      doc = REXML::Document.new(xml)
-      body = doc.elements['//soap:Body'] || doc
-      { success: true, body: body.to_s }
-    rescue REXML::ParseException
-      { error: 'Invalid XML response' }
+      doc = Hash.from_xml(xml)
+      { success: true, body: doc }
+    rescue
+      {success: false, message: 'Invalid SOAP response' }
     end
   end
 end
