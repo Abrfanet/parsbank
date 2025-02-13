@@ -18,7 +18,6 @@ module Parsbank
       raise ArgumentError, "Missing required argument: #{e.message}"
     end
 
-
     def validate(response = nil)
       @response = response[:payment_request_response] || response[:payment_verification_response] || response
       @ref_id = @response[:authority]
@@ -65,7 +64,7 @@ module Parsbank
         </script>
       JS
 
-      "#{javascript_tag}#{t('actions.redirect_to_gate')}".html_safe
+      "#{redirect_loaders}#{javascript_tag}#{I18n.t('actions.redirect_to_gate')}".gsub(/\s+/, ' ')
     end
 
     private
