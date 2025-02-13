@@ -4,7 +4,7 @@ require 'openssl'
 require 'base64'
 
 module Parsbank
-  class Binance
+  class Binance < Gates
 
     attr_accessor :api_key, :secret_key, :endpoint
 
@@ -18,12 +18,6 @@ module Parsbank
       end
     end
 
-    def self.logo
-      file_path = "#{__dir__}/logo.svg"
-      return [404, { 'Content-Type' => 'text/plain' }, ['File not found']] unless File.exist?(file_path)
-
-      File.read file_path
-    end
 
     # Generate a payment address for a given cryptocurrency
     def generate_payment_address(asset:, network: nil)

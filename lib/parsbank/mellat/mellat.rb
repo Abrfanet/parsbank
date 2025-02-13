@@ -1,5 +1,5 @@
 module Parsbank
-  class Mellat
+  class Mellat < Gates
     attr_accessor :order_id, :amount, :local_date, :local_time, :additional_data, :payer_id, :callback_url
     attr_reader :response, :status, :status_message, :ref_id
 
@@ -17,12 +17,6 @@ module Parsbank
       @wsdl = create_wsdl_client
     rescue KeyError => e
       raise ArgumentError, "Missing required argument: #{e.message}"
-    end
-
-    def self.logo
-      file_path = "#{__dir__}/logo.svg"
-      return [404, { 'Content-Type' => 'text/plain' }, ['File not found']] unless File.exist?(file_path)
-      File.read file_path
     end
     
     def validate(response = nil)
@@ -70,10 +64,6 @@ function postRefId (refIdValue) {
     end
 
     private
-
-    def default_config(key)
-        Parsbank.load_secrets_yaml[self.class.name.split("::").last.downcase][key.to_s]
-    end
 
     def create_wsdl_client
       Savon.client(

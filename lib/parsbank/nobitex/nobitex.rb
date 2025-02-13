@@ -3,7 +3,7 @@
 require 'faraday'
 require 'faraday_middleware'
 module Parsbank
-  class Nobitex
+  class Nobitex < Gates
     attr_accessor :amount, :description, :email, :mobile, :merchant, :callbackUrl, :orderId, :allowedCards, :ledgerId,
                   :nationalCode, :checkMobileWithCard
 
@@ -23,12 +23,6 @@ module Parsbank
       @checkMobileWithCard = args.fetch(:checkMobileWithCard, nil)
     rescue KeyError => e
       raise ArgumentError, "Missing required argument: #{e.message}"
-    end
-
-    def self.logo
-      file_path = "#{__dir__}/logo.svg"
-      return [404, { 'Content-Type' => 'text/plain' }, ['File not found']] unless File.exist?(file_path)
-      File.read file_path
     end
 
 
@@ -79,10 +73,6 @@ module Parsbank
     end
 
     private
-
-    def default_config(key)
-      Parsbank.load_secrets_yaml[self.class.name.split('::').last.downcase][key.to_s]
-    end
 
     def create_rest_client
       connection = Parsbank::Restfull.new(

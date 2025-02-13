@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Parsbank
-  class Zarinpal
+  class Zarinpal < Gates
     attr_accessor :amount, :description, :email, :mobile, :merchant_id, :wsdl
     attr_reader :response, :status, :status_message, :ref_id, :logo
 
@@ -18,12 +18,6 @@ module Parsbank
       raise ArgumentError, "Missing required argument: #{e.message}"
     end
 
-    def self.logo
-      file_path = "#{__dir__}/logo.svg"
-      return [404, { 'Content-Type' => 'text/plain' }, ['File not found']] unless File.exist?(file_path)
-
-      File.read file_path
-    end
 
     def validate(response = nil)
       @response = response[:payment_request_response] || response[:payment_verification_response] || response
@@ -75,10 +69,6 @@ module Parsbank
     end
 
     private
-
-    def default_config(key)
-      Parsbank.load_secrets_yaml[self.class.name.split('::').last.downcase][key.to_s]
-    end
 
     def create_wsdl_client
       Parsbank::SOAP.new((default_config(:wsdl) || 'https://de.zarinpal.com/pg/services/WebGate/wsdl'), 'http://schemas.xmlsoap.org/soap/envelope')
